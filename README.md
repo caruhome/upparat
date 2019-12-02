@@ -101,7 +101,7 @@ Create a job in the AWS Iot Console.
   pip install -e ".[dev,sentry]"
   ```
 
-- Install the pre-commit framework.
+- Install the [pre-commit framework](https://pre-commit.com/#install).
 
 - Install the pre-commit hooks:
   ```
