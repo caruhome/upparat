@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: "Upparat test stack"
+
+Resources:
+  UpparatTestBucket:
+    Type: "AWS::S3::Bucket"
+    
+  UpparatTestRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "iot.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: "UpparatTestS3GetPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "s3:GetObject"
+                Resource:
+                  - !Sub "${UpparatTestBucket.Arn}/*"
+
+Outputs:
+  RoleArn:
+    Value: !GetAtt UpparatTestRole.Arn
+  BucketName:
+    Value: !Ref UpparatTestBucket

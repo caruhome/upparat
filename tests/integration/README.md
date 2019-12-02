@@ -68,30 +68,37 @@ the private key (as `private.pem.key`) and the [AWS root certificate](https://ww
 
 1. Start upparat: `upparat -c upparat/config.ini`
 
-### Jobs
+### Test Jobs
+To use AWS Iot jobs with pre-signed S3 URLs create a S3 bucket and a corresponding role.
 
-To use AWS Iot jobs with pre-signed S3 URLs create the following:
-1. A S3 bucket (`<MY_BUCKET>`) where the files to be downloaded are stored
-1. A IoT role to sign the download URL with the following policy:
-   ```json
-   {
-     "Version": "2012-10-17",
-     "Statement": [
-       {
-         "Effect": "Allow",
-         "Action": "s3:GetObject",
-         "Resource": "arn:aws:s3:::<MY_BUCKET>/*"
-       }
-     ]
-   }
+#### AWS CloudFormation Setup
+1. Install [AWS CLI](https://aws.amazon.com/cli/)
+1. Deploy stack:
+   ```bash
+   aws cloudformation deploy --template-file upparat-test.yml --capabilities CAPABILITY_IAM --stack-name upparat-test   
+   export UPPARAT_TEST_BUCKET_NAME=`aws cloudformation describe-stacks --stack-name  upparat-test --query "Stacks[0].Outputs[?OutputKey=='BucketName'].OutputValue" --output text`
+   export UPPARAT_TEST_ROLE_ARN=`aws cloudformation describe-stacks --stack-name  upparat-test --query "Stacks[0].Outputs[?OutputKey=='RoleArn'].OutputValue" --output text`
    ```
+
+  
+#### Create AWS IoT Job
+1. Upload a test file:
+   ```bash
+   export UPPARAT_TEST_FILE="<MY_FILE>"
+   aws s3 cp ${UPPARAT_TEST_FILE} s3://${UPPARAT_BUCKET_NAME}
+   ```
+
 1. Set the following environment variables and run the script:
    ```bash
-   export THINGS="<COMA-SEPARATED-THING-ARNS>"
-   export S3_FILE_URL="<S3-URL-OF-FILE>"
-   export S3_ROLE_ARN="<SIGNER_ROLE_ARN>"
+   export UPPARAT_TEST_THINGS="<COMA-SEPARATED-THING-ARNS>"
    python aws_jobs.py
    ```
+   
+#### Cleanup
+```bash
+aws s3 rm s3://${UPPARAT_BUCKET_NAME} --recursive
+aws cloudformation delete-stack --stack-name upparat-test
+```
 
 ### Docker Compose
 

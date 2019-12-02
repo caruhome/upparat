@@ -6,9 +6,10 @@ import boto3
 
 iot_client = boto3.client("iot")
 
-ENV_THINGS = "THINGS"
-ENV_S3_ROLE_ARN = "S3_ROLE_ARN"
-ENV_S3_FILE_URL = "S3_FILE_URL"
+ENV_THINGS = "UPPARAT_TEST_THINGS"
+ENV_S3_ROLE_ARN = "UPPARAT_TEST_ROLE_ARN"
+ENV_S3_BUCKET = "UPPARAT_TEST_BUCKET_NAME"
+ENV_S3_FILE = "UPPARAT_TEST_FILE"
 
 
 def create_job(targets, s3_url, role_arn):
@@ -20,9 +21,7 @@ def create_job(targets, s3_url, role_arn):
         document=json.dumps(
             {
                 "action": "update",
-                # "meta": "same",
-                # "force": True,
-                "version": "0.1.3",
+                "version": "0.0.1",
                 "file": f"${{aws:iot:s3-presigned-url:{s3_url}}}",
             }
         ),
@@ -40,6 +39,9 @@ if __name__ == "__main__":
     assert things
 
     s3_role_arn = os.environ.get(ENV_S3_ROLE_ARN)
-    s3_file_url = os.environ.get(ENV_S3_FILE_URL)
+    s3_file = os.environ.get(ENV_S3_FILE)
+    s3_bucket_name = os.environ.get(ENV_S3_BUCKET)
 
-    create_job(things, s3_file_url, s3_role_arn)
+    s3_object_url = f"https://{s3_bucket_name}.s3.amazonaws.com/{s3_file}"
+
+    create_job(things, s3_object_url, s3_role_arn)
