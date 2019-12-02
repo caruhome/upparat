@@ -72,7 +72,7 @@ the private key (as `private.pem.key`) and the [AWS root certificate](https://ww
 
 To use AWS Iot jobs with pre-signed S3 URLs create the following:
 1. A S3 bucket (`<MY_BUCKET>`) where the files to be downloaded are stored
-1. A IoT role to sign to download URL with the following policy:
+1. A IoT role to sign the download URL with the following policy:
    ```json
    {
      "Version": "2012-10-17",
@@ -88,7 +88,7 @@ To use AWS Iot jobs with pre-signed S3 URLs create the following:
 1. Set the following environment variables and run the script:
    ```bash
    export THINGS="<COMA-SEPARATED-THING-ARNS>"
-   export S3_FILE_URL="<S3-URL-OF-FILE>
+   export S3_FILE_URL="<S3-URL-OF-FILE>"
    export S3_ROLE_ARN="<SIGNER_ROLE_ARN>"
    python aws_jobs.py
    ```
