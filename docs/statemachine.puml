@@ -1,0 +1,25 @@
+@startuml
+[*] --> fetch_jobs
+state fetch_jobs
+state monitor
+state select_job
+state verify_job
+state download
+state install
+state restart
+state verify_installation
+    fetch_jobs --> monitor: no-jobs-pending
+    fetch_jobs --> select_job: jobs-available
+    monitor --> select_job: jobs-available
+    select_job --> verify_job: job-selected
+    select_job --> fetch_jobs: job-resource-not-found
+    verify_job --> download: job-verified
+    verify_job --> fetch_jobs: job-revoked
+    verify_job --> verify_installation: job-installation-done
+    verify_installation --> fetch_jobs: job-installation-complete
+    download --> fetch_jobs: download-interrupted
+    download --> install: download-completed
+    install --> fetch_jobs: installation-aborted
+    install --> restart: installation-done
+    restart --> fetch_jobs: restart-aborted
+@enduml

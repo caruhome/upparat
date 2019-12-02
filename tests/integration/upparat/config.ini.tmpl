@@ -1,0 +1,15 @@
+[service]
+log_level = DEBUG
+download_location = /tmp
+
+[broker]
+host = mosquitto
+port = 1883
+thing_name = @THING_NAME@
+
+[hooks]
+version = @BASE_DIR@/upparat/hooks/version.sh
+; download = <checks if allowed to download>
+; ready = <checks if your system is ready/stable>
+; install = @BASE_DIR@/upparat/hooks/install.sh
+; restart = <restarts your device/service>
