@@ -4,17 +4,16 @@ import pytest
 from pysm import Event
 
 from upparat.cli import create_statemachine
-from upparat.events import (
-    JOB_RESOURCE_NOT_FOUND,
-    JOBS_AVAILABLE,
-    DOWNLOAD_INTERRUPTED,
-    DOWNLOAD_COMPLETED,
-    NO_JOBS_PENDING,
-    JOB_VERIFIED,
-    JOB_SELECTED,
-    JOB,
-)
-from upparat.jobs import Job, JobStatus
+from upparat.events import DOWNLOAD_COMPLETED
+from upparat.events import DOWNLOAD_INTERRUPTED
+from upparat.events import JOB
+from upparat.events import JOB_RESOURCE_NOT_FOUND
+from upparat.events import JOB_SELECTED
+from upparat.events import JOB_VERIFIED
+from upparat.events import JOBS_AVAILABLE
+from upparat.events import NO_JOBS_PENDING
+from upparat.jobs import Job
+from upparat.jobs import JobStatus
 from upparat.statemachine.download import DownloadState
 from upparat.statemachine.fetch_jobs import FetchJobsState
 from upparat.statemachine.install import InstallState

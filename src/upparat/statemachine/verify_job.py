@@ -1,19 +1,20 @@
 import logging
 import threading
 
-from pysm import Event, pysm
+from pysm import Event
+from pysm import pysm
 
 from upparat.config import settings
-from upparat.events import (
-    JOB,
-    JOB_VERIFIED,
-    HOOK_RESULT,
-    HOOK_MESSAGE,
-    JOB_REVOKED,
-    JOB_INSTALLATION_DONE,
-)
+from upparat.events import HOOK_MESSAGE
+from upparat.events import HOOK_RESULT
+from upparat.events import JOB
+from upparat.events import JOB_INSTALLATION_DONE
+from upparat.events import JOB_REVOKED
+from upparat.events import JOB_VERIFIED
 from upparat.hooks import run_hook
-from upparat.jobs import JobStatus, JobInternalStatus, job_succeeded
+from upparat.jobs import job_succeeded
+from upparat.jobs import JobInternalStatus
+from upparat.jobs import JobStatus
 from upparat.statemachine import JobProcessingState
 
 logger = logging.getLogger(__name__)

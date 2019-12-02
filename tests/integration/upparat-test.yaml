@@ -5,7 +5,7 @@ Description: "Upparat test stack"
 Resources:
   UpparatTestBucket:
     Type: "AWS::S3::Bucket"
-    
+
   UpparatTestRole:
     Type: "AWS::IAM::Role"
     Properties:

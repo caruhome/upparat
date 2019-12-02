@@ -1,16 +1,16 @@
 # Upparat
 
-The _Upparat_ is a secure and robust service that runs on your 
-IoT device to download and install files such as firmware updates. 
+The _Upparat_ is a secure and robust service that runs on your
+IoT device to download and install files such as firmware updates.
 
 ## How it works
 
-The _Upparat_ subscribes to [AWS Iot Jobs](https://docs.aws.amazon.com/en_pv/iot/latest/developerguide/iot-jobs.html), 
-downloads and verifies the specified file and runs an installation command of your 
-choice. It handles all the nitty gritty details such as cancelled jobs, 
+The _Upparat_ subscribes to [AWS Iot Jobs](https://docs.aws.amazon.com/en_pv/iot/latest/developerguide/iot-jobs.html),
+downloads and verifies the specified file and runs an installation command of your
+choice. It handles all the nitty gritty details such as cancelled jobs,
 failed downloads or progress updates.
 
-Several hooks provide a seamless integration in your device environment and allow you 
+Several hooks provide a seamless integration in your device environment and allow you
 to use any software update tool such as [RAUC](https://github.com/rauc/rauc),
 [SWUpdate](https://github.com/sbabic/swupdate) or custom solutions.
 
@@ -39,7 +39,7 @@ log_level = <DEBUG|INFO|WARNING|ERROR|EXCEPTION>
 download_location = <path>
 
 [broker]
-# Default: 127.0.0.1 
+# Default: 127.0.0.1
 host = <host>
 
 # Default: 1883
@@ -101,7 +101,13 @@ Create a job in the AWS Iot Console.
   pip install -e ".[dev,sentry]"
   ```
 
+- Install the pre-commit framework.
+
+- Install the pre-commit hooks:
+  ```
+  pre-commit install --install-hooks
+  ```
+
 ### Tests
 
 - `docker-compose run test`
-

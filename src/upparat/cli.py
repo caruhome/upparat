@@ -7,24 +7,24 @@ from queue import Queue
 
 from pysm import Event
 
-from upparat.config import ENV_CONFIG_FILE, ENV_VERBOSE, settings
-from upparat.events import (
-    EXIT_SIGNAL_SENT,
-    NO_JOBS_PENDING,
-    DOWNLOAD_COMPLETED,
-    JOB_RESOURCE_NOT_FOUND,
-    JOBS_AVAILABLE,
-    JOB_SELECTED,
-    JOB_INSTALLATION_DONE,
-    JOB_VERIFIED,
-    JOB_REVOKED,
-    DOWNLOAD_INTERRUPTED,
-    ENTER,
-    JOB_INSTALLATION_COMPLETE,
-    INSTALLATION_ABORTED,
-    INSTALLATION_DONE,
-    RESTART_ABORTED,
-)
+from upparat.config import ENV_CONFIG_FILE
+from upparat.config import ENV_VERBOSE
+from upparat.config import settings
+from upparat.events import DOWNLOAD_COMPLETED
+from upparat.events import DOWNLOAD_INTERRUPTED
+from upparat.events import ENTER
+from upparat.events import EXIT_SIGNAL_SENT
+from upparat.events import INSTALLATION_ABORTED
+from upparat.events import INSTALLATION_DONE
+from upparat.events import JOB_INSTALLATION_COMPLETE
+from upparat.events import JOB_INSTALLATION_DONE
+from upparat.events import JOB_RESOURCE_NOT_FOUND
+from upparat.events import JOB_REVOKED
+from upparat.events import JOB_SELECTED
+from upparat.events import JOB_VERIFIED
+from upparat.events import JOBS_AVAILABLE
+from upparat.events import NO_JOBS_PENDING
+from upparat.events import RESTART_ABORTED
 from upparat.mqtt import MQTT
 from upparat.statemachine import UpparatStateMachine
 from upparat.statemachine.download import DownloadState
@@ -58,7 +58,7 @@ def parse_args_to_env():
     if args.config_file:
         os.environ[ENV_CONFIG_FILE] = args.config_file
     if args.verbose:
-        os.environ[ENV_VERBOSE] = "True"
+        os.environ[ENV_VERBOSE] = str(True)
 
     return args
 

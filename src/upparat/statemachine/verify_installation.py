@@ -4,9 +4,13 @@ import threading
 from pysm import pysm
 
 from upparat.config import settings
-from upparat.events import HOOK_RESULT, HOOK_MESSAGE, JOB_INSTALLATION_COMPLETE
+from upparat.events import HOOK_MESSAGE
+from upparat.events import HOOK_RESULT
+from upparat.events import JOB_INSTALLATION_COMPLETE
 from upparat.hooks import run_hook
-from upparat.jobs import job_succeeded, JobInternalStatus, job_failed
+from upparat.jobs import job_failed
+from upparat.jobs import job_succeeded
+from upparat.jobs import JobInternalStatus
 from upparat.statemachine import JobProcessingState
 
 logger = logging.getLogger(__name__)

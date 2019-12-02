@@ -5,15 +5,13 @@ from paho.mqtt.client import topic_matches_sub
 from pysm import Event
 
 from upparat.config import settings
-from upparat.events import (
-    MQTT_MESSAGE_RECEIVED,
-    MQTT_EVENT_TOPIC,
-    MQTT_EVENT_PAYLOAD,
-    JOB_EXECUTION_SUMMARIES,
-    JOB_EXECUTION_SUMMARIES_PROGRESS,
-    JOBS_AVAILABLE,
-    JOB_EXECUTION_SUMMARIES_QUEUED,
-)
+from upparat.events import JOB_EXECUTION_SUMMARIES
+from upparat.events import JOB_EXECUTION_SUMMARIES_PROGRESS
+from upparat.events import JOB_EXECUTION_SUMMARIES_QUEUED
+from upparat.events import JOBS_AVAILABLE
+from upparat.events import MQTT_EVENT_PAYLOAD
+from upparat.events import MQTT_EVENT_TOPIC
+from upparat.events import MQTT_MESSAGE_RECEIVED
 from upparat.jobs import pending_jobs_response
 from upparat.statemachine import BaseState
 

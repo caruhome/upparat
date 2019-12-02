@@ -4,20 +4,19 @@ import logging
 from paho.mqtt.client import topic_matches_sub
 from pysm import Event
 
-from upparat.events import (
-    MQTT_SUBSCRIBED,
-    MQTT_MESSAGE_RECEIVED,
-    NO_JOBS_PENDING,
-    JOBS_AVAILABLE,
-    JOB_EXECUTION_SUMMARIES,
-    JOB_EXECUTION_SUMMARIES_PROGRESS,
-    MQTT_EVENT_TOPIC,
-    MQTT_EVENT_PAYLOAD,
-    JOB_EXECUTION_SUMMARIES_QUEUED,
-)
-from upparat.jobs import get_pending_job_executions, get_pending_job_executions_response
-from upparat.statemachine import BaseState
 from upparat.config import settings
+from upparat.events import JOB_EXECUTION_SUMMARIES
+from upparat.events import JOB_EXECUTION_SUMMARIES_PROGRESS
+from upparat.events import JOB_EXECUTION_SUMMARIES_QUEUED
+from upparat.events import JOBS_AVAILABLE
+from upparat.events import MQTT_EVENT_PAYLOAD
+from upparat.events import MQTT_EVENT_TOPIC
+from upparat.events import MQTT_MESSAGE_RECEIVED
+from upparat.events import MQTT_SUBSCRIBED
+from upparat.events import NO_JOBS_PENDING
+from upparat.jobs import get_pending_job_executions
+from upparat.jobs import get_pending_job_executions_response
+from upparat.statemachine import BaseState
 
 
 logger = logging.getLogger(__name__)

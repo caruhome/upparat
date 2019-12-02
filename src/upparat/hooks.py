@@ -6,7 +6,10 @@ import time
 import pysm
 
 from upparat.config import settings
-from upparat.events import HOOK_TIMED_OUT, HOOK_FAILED, HOOK_RESULT, HOOK_MESSAGE
+from upparat.events import HOOK_FAILED
+from upparat.events import HOOK_MESSAGE
+from upparat.events import HOOK_RESULT
+from upparat.events import HOOK_TIMED_OUT
 
 logger = logging.getLogger(__name__)
 

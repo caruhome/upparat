@@ -5,7 +5,8 @@ from urllib.error import HTTPError
 import pytest
 
 from upparat.config import settings
-from upparat.events import DOWNLOAD_INTERRUPTED, DOWNLOAD_COMPLETED
+from upparat.events import DOWNLOAD_COMPLETED
+from upparat.events import DOWNLOAD_INTERRUPTED
 from upparat.statemachine import UpparatStateMachine
 from upparat.statemachine.download import DownloadState
 

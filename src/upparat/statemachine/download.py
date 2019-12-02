@@ -2,16 +2,19 @@ import logging
 import os
 import socket
 import threading
-import urllib
 import urllib.request
-from urllib.error import HTTPError, URLError
+from urllib.error import HTTPError
+from urllib.error import URLError
 
 import backoff
 import pysm
 
 from upparat.config import settings
-from upparat.events import DOWNLOAD_COMPLETED, DOWNLOAD_INTERRUPTED, JOB
-from upparat.jobs import job_in_progress, JobInternalStatus
+from upparat.events import DOWNLOAD_COMPLETED
+from upparat.events import DOWNLOAD_INTERRUPTED
+from upparat.events import JOB
+from upparat.jobs import job_in_progress
+from upparat.jobs import JobInternalStatus
 from upparat.statemachine import JobProcessingState
 
 logger = logging.getLogger(__name__)

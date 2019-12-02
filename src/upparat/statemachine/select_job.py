@@ -5,38 +5,34 @@ from paho.mqtt.client import topic_matches_sub
 from pysm import Event
 
 from upparat.config import settings
-from upparat.events import (
-    MQTT_SUBSCRIBED,
-    MQTT_MESSAGE_RECEIVED,
-    NO_JOBS_PENDING,
-    MQTT_EVENT_TOPIC,
-    MQTT_EVENT_PAYLOAD,
-    JOB_EXECUTION_SUMMARIES,
-    JOB_EXECUTION_SUMMARIES_PROGRESS,
-    JOB_EXECUTION_SUMMARIES_QUEUED,
-    JOB_RESOURCE_NOT_FOUND,
-    JOB_SELECTED,
-    JOB,
-)
-from upparat.jobs import (
-    JOB_ID,
-    job_failed,
-    JOB_DOCUMENT,
-    JobInternalStatus,
-    describe_job_execution,
-    describe_job_execution_response,
-    JOB_STATUS,
-    JOB_DOCUMENT_FILE,
-    EXECUTION,
-    JOB_DOCUMENT_VERSION,
-    JOB_DOCUMENT_FORCE,
-    JOB_DOCUMENT_META,
-    JOB_ACCEPTED,
-    JOB_REJECTED,
-    JOB_MESSAGE,
-    Job,
-    JOB_STATUS_DETAILS,
-)
+from upparat.events import JOB
+from upparat.events import JOB_EXECUTION_SUMMARIES
+from upparat.events import JOB_EXECUTION_SUMMARIES_PROGRESS
+from upparat.events import JOB_EXECUTION_SUMMARIES_QUEUED
+from upparat.events import JOB_RESOURCE_NOT_FOUND
+from upparat.events import JOB_SELECTED
+from upparat.events import MQTT_EVENT_PAYLOAD
+from upparat.events import MQTT_EVENT_TOPIC
+from upparat.events import MQTT_MESSAGE_RECEIVED
+from upparat.events import MQTT_SUBSCRIBED
+from upparat.events import NO_JOBS_PENDING
+from upparat.jobs import describe_job_execution
+from upparat.jobs import describe_job_execution_response
+from upparat.jobs import EXECUTION
+from upparat.jobs import Job
+from upparat.jobs import JOB_ACCEPTED
+from upparat.jobs import JOB_DOCUMENT
+from upparat.jobs import JOB_DOCUMENT_FILE
+from upparat.jobs import JOB_DOCUMENT_FORCE
+from upparat.jobs import JOB_DOCUMENT_META
+from upparat.jobs import JOB_DOCUMENT_VERSION
+from upparat.jobs import job_failed
+from upparat.jobs import JOB_ID
+from upparat.jobs import JOB_MESSAGE
+from upparat.jobs import JOB_REJECTED
+from upparat.jobs import JOB_STATUS
+from upparat.jobs import JOB_STATUS_DETAILS
+from upparat.jobs import JobInternalStatus
 from upparat.statemachine import BaseState
 
 logger = logging.getLogger(__name__)

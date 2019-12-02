@@ -3,19 +3,20 @@ import logging
 import sys
 
 from paho.mqtt.client import topic_matches_sub
-from pysm import State, StateMachine
+from pysm import State
+from pysm import StateMachine
 
-from upparat.config import settings, NAME
-from upparat.events import (
-    EXIT_SIGNAL_SENT,
-    JOB,
-    MQTT_EVENT_TOPIC,
-    MQTT_EVENT_PAYLOAD,
-    MQTT_MESSAGE_RECEIVED,
-    ENTER,
-    EXIT,
-)
-from upparat.jobs import pending_jobs_response, get_in_progress_job_ids
+from upparat.config import NAME
+from upparat.config import settings
+from upparat.events import ENTER
+from upparat.events import EXIT
+from upparat.events import EXIT_SIGNAL_SENT
+from upparat.events import JOB
+from upparat.events import MQTT_EVENT_PAYLOAD
+from upparat.events import MQTT_EVENT_TOPIC
+from upparat.events import MQTT_MESSAGE_RECEIVED
+from upparat.jobs import get_in_progress_job_ids
+from upparat.jobs import pending_jobs_response
 from upparat.mqtt import MQTT
 
 logger = logging.getLogger(__name__)

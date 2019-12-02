@@ -134,7 +134,7 @@ class LazySettings(object):
 
         self.broker = _broker_section(config)
         self.hooks = _hooks_section(config)
-        self.service = _service_section(config, os.environ.get(ENV_VERBOSE, False))
+        self.service = _service_section(config, ENV_VERBOSE in os.environ)
 
         self._initialized = True
 
