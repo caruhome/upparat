@@ -1,0 +1,7 @@
+steps:
+  - label: test
+    agents:
+      queue: build
+    plugins:
+    - docker-compose#v3.1.0:
+        run: test
