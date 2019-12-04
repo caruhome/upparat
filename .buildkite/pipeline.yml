@@ -5,3 +5,4 @@ steps:
     plugins:
     - docker-compose#v3.1.0:
         run: test
+        config: docker-compose.yaml
