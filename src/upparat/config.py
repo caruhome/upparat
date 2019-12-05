@@ -1,12 +1,11 @@
+import argparse
 import configparser
 import logging
 import os
 import socket
+import sys
 import tempfile
 from pathlib import Path
-
-ENV_CONFIG_FILE = "UPPARAT_CONFIG_FILE"
-ENV_VERBOSE = "UPPARAT_VERBOSE"
 
 NAME = "upparat"
 
@@ -35,9 +34,29 @@ HOOKS = (VERSION, DOWNLOAD, READY, INSTALL, RESTART)
 
 logger = logging.getLogger(__name__)
 
+empty = object()
+
+ENV_CONFIG_USE_SYS_ARGS = "upparat-use-sys-args"
+
+
+def _argument_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        help="Use verbose logging. This is equivalent to setting log_level to DEBUG "
+        "in the configuration file. "
+        "This overrides any logging options given in the configuration file.",
+        action="store_true",
+    )
+    parser.add_argument("-c", "--config-file", help="Load configuration from a file.")
+    parser.add_argument("-t", "--thing-name", help="AWS thing name")
+    return parser
+
 
 class Service:
     download_location: str
+    log_level: str
     sentry: str  # todo: remove for release
 
 
@@ -68,6 +87,8 @@ def _service_section(config, verbose):
             SERVICE_SECTION, LOG_LEVEL, fallback=logging.getLevelName(logging.WARNING)
         )
 
+    service.log_level = log_level
+
     logging.basicConfig(
         format="[%(asctime)s] %(levelname)s in %(module)s: %(message)s", level=log_level
     )
@@ -95,13 +116,16 @@ def _service_section(config, verbose):
     return service
 
 
-def _broker_section(config):
+def _broker_section(config, thing_name=None):
     broker = Broker()
     broker.host = config.get(BROKER_SECTION, HOST, fallback="127.0.0.1")
     broker.port = config.getint(BROKER_SECTION, PORT, fallback=1883)
-    broker.thing_name = config.get(
-        BROKER_SECTION, THING_NAME, fallback=socket.gethostname()
-    )
+    if thing_name:
+        broker.thing_name = thing_name
+    else:
+        broker.thing_name = config.get(
+            BROKER_SECTION, THING_NAME, fallback=socket.gethostname()
+        )
     broker.client_id = config.get(BROKER_SECTION, CLIENT_ID, fallback=NAME)
 
     return broker
@@ -121,27 +145,47 @@ def _hooks_section(config):
     return hooks
 
 
-class LazySettings(object):
-    def __init__(self):
-        self._initialized = False
+class Settings:
+    def __init__(self, args=None):
+        config_file = None
+        thing_name = None
+        verbose = False
 
-    def _setup(self):
-        config_file = os.environ.get(ENV_CONFIG_FILE)
         config = configparser.ConfigParser()
+
+        if args:
+            args = _argument_parser().parse_args(args)
+            config_file = args.config_file
+            thing_name = args.thing_name
+            verbose = args.verbose
 
         if config_file:
             config.read(config_file)
 
-        self.broker = _broker_section(config)
+        self.broker = _broker_section(config, thing_name)
         self.hooks = _hooks_section(config)
-        self.service = _service_section(config, ENV_VERBOSE in os.environ)
+        self.service = _service_section(config, verbose)
 
-        self._initialized = True
+
+class LazySettings:
+    _wrapped = None
+
+    def __init__(self):
+        self._wrapped = empty
+
+    def _setup(self):
+        args = None
+        if ENV_CONFIG_USE_SYS_ARGS in os.environ:
+            args = sys.argv[1:]
+        self._wrapped = Settings(args)
 
     def __getattr__(self, name):
-        if not self._initialized:
+        """Return the value of a setting and cache it in self.__dict__."""
+        if self._wrapped is empty:
             self._setup()
-        return self.__getattribute__(name)
+        val = getattr(self._wrapped, name)
+        self.__dict__[name] = val
+        return val
 
 
 settings = LazySettings()

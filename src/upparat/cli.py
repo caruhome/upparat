@@ -1,4 +1,3 @@
-import argparse
 import logging
 import os
 import signal
@@ -7,8 +6,7 @@ from queue import Queue
 
 from pysm import Event
 
-from upparat.config import ENV_CONFIG_FILE
-from upparat.config import ENV_VERBOSE
+from upparat.config import ENV_CONFIG_USE_SYS_ARGS
 from upparat.config import settings
 from upparat.events import DOWNLOAD_COMPLETED
 from upparat.events import DOWNLOAD_INTERRUPTED
@@ -39,28 +37,6 @@ from upparat.statemachine.verify_job import VerifyJobState
 BASE = Path(__file__).parent
 
 logger = logging.getLogger(__name__)
-
-
-def parse_args_to_env():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        help="Use verbose logging. This is equivalent to setting log_level to DEBUG "
-        "in the configuration file. "
-        "This overrides any logging options given in the configuration file.",
-        action="store_true",
-    )
-    parser.add_argument("-c", "--config-file", help="Load configuration from a file.")
-
-    args = parser.parse_args()
-
-    if args.config_file:
-        os.environ[ENV_CONFIG_FILE] = args.config_file
-    if args.verbose:
-        os.environ[ENV_VERBOSE] = str(True)
-
-    return args
 
 
 def create_statemachine(event_queue, mqtt_client):
@@ -162,8 +138,6 @@ def create_statemachine(event_queue, mqtt_client):
 
 
 def cli():
-    parse_args_to_env()
-
     inbox = Queue()
 
     if settings.service.sentry:
@@ -190,5 +164,10 @@ def cli():
         state_machine.dispatch(event)
 
 
-if __name__ == "__main__":
+def execute_from_command_line():
+    os.environ[ENV_CONFIG_USE_SYS_ARGS] = "True"
     cli()
+
+
+if __name__ == "__main__":
+    execute_from_command_line()

@@ -18,5 +18,5 @@ setup(
         "dev": ["pytest", "pytest-mock", "boto3", "ipdb"],
         "sentry": ["sentry-sdk"],
     },
-    entry_points={"console_scripts": ["upparat=upparat.cli:cli"]},
+    entry_points={"console_scripts": ["upparat=upparat.cli:execute_from_command_line"]},
 )
