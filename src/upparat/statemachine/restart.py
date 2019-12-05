@@ -8,8 +8,10 @@ from upparat.events import HOOK_RESULT
 from upparat.events import RESTART_INTERRUPTED
 from upparat.hooks import run_hook
 from upparat.jobs import job_failed
+from upparat.jobs import job_in_progress
 from upparat.jobs import job_succeeded
 from upparat.jobs import JobFailedStatus
+from upparat.jobs import JobProgressStatus
 from upparat.jobs import JobSuccessStatus
 from upparat.statemachine import JobProcessingState
 
@@ -26,6 +28,12 @@ class RestartState(JobProcessingState):
     def on_enter(self, state, event):
         if settings.hooks.restart:
             logger.info("Initiate restart")
+            job_in_progress(
+                self.mqtt_client,
+                settings.broker.thing_name,
+                self.job.id_,
+                JobProgressStatus.REBOOT_START.value,
+            )
             self.stop_restart_hook = run_hook(
                 settings.hooks.restart,
                 self._restart_hook_event,
