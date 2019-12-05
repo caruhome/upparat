@@ -63,9 +63,11 @@ def _hook(hook, stop_event, callback, args=None):
                 break
 
 
-def run_hook(hook, stop_event, callback, args=None):
+def run_hook(hook, callback, args=None):
     if not hook:
         return
+
+    stop_event = threading.Event()
 
     threading.Thread(
         daemon=True,
@@ -77,3 +79,5 @@ def run_hook(hook, stop_event, callback, args=None):
             "callback": callback,
         },
     ).start()
+
+    return stop_event

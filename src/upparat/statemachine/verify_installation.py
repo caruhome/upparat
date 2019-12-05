@@ -1,5 +1,4 @@
 import logging
-import threading
 
 from pysm import pysm
 
@@ -10,7 +9,8 @@ from upparat.events import JOB_INSTALLATION_COMPLETE
 from upparat.hooks import run_hook
 from upparat.jobs import job_failed
 from upparat.jobs import job_succeeded
-from upparat.jobs import JobInternalStatus
+from upparat.jobs import JobFailedStatus
+from upparat.jobs import JobSuccessStatus
 from upparat.statemachine import JobProcessingState
 
 logger = logging.getLogger(__name__)
@@ -18,29 +18,41 @@ logger = logging.getLogger(__name__)
 
 class VerifyInstallationState(JobProcessingState):
     name = "verify_installation"
-    stop_version_hook = threading.Event()
-    stop_ready_hook = threading.Event()
+
+    def __init__(self):
+        self.stop_version_hook = None
+        self.stop_ready_hook = None
+        super().__init__()
 
     def on_enter(self, state, event):
-        if settings.hooks.version:
-            # Start version check
-            run_hook(
-                settings.hooks.version,
-                self.stop_version_hook,
-                self._version_hook_event,
-                args=[self.job.meta],
+        if self.job.force or not settings.hooks.version:
+            logger.info("Skip version check")
+            job_succeeded(
+                self.mqtt_client,
+                settings.broker.thing_name,
+                self.job.id_,
+                JobSuccessStatus.COMPLETE_NO_VERSION_CHECK.value,
             )
+            self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))
         else:
-            self._installation_successful()
+            # Start version check
+            logger.debug("Start version check")
+            self.stop_version_hook = run_hook(
+                settings.hooks.version, self._version_hook_event, args=[self.job.meta]
+            )
 
     def on_exit(self, state, event):
-        self.stop_version_hook.set()
-        self.stop_ready_hook.set()
+        self._stop_hooks()
 
     def on_job_cancelled(self, state, event):
-        self.stop_version_hook.set()
-        self.stop_ready_hook.set()
+        self._stop_hooks()
         self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))
+
+    def _stop_hooks(self):
+        if self.stop_version_hook:
+            self.stop_version_hook.set()
+        if self.stop_ready_hook:
+            self.stop_ready_hook.set()
 
     def _version_hook_event(self, event):
         if event.name == HOOK_RESULT:
@@ -48,40 +60,61 @@ class VerifyInstallationState(JobProcessingState):
             # Check if we do not already run on the version to be installed
             if self.job.version == version:
                 if settings.hooks.ready:
+                    logger.debug("Start ready hook")
                     # Start ready check
-                    run_hook(
+                    self.stop_ready_hook = run_hook(
                         settings.hooks.ready,
-                        self.stop_ready_hook,
                         self._ready_hook_event,
                         args=[self.job.meta],
                     )
                 else:
-                    return self._installation_successful()
+                    logger.info("Skip ready hook")
+                    job_succeeded(
+                        self.mqtt_client,
+                        settings.broker.thing_name,
+                        self.job.id_,
+                        JobSuccessStatus.COMPLETE_NO_READY_CHECK.value,
+                    )
+                    self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))
             else:
-                self._installation_failed()
+                job_failed(
+                    self.mqtt_client,
+                    settings.broker.thing_name,
+                    self.job.id_,
+                    JobFailedStatus.VERSION_MISMATCH.value,
+                    message=version,
+                )
+                self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))
         else:
-            self._installation_failed()
+            error_message = event.cargo[HOOK_MESSAGE]
+            logger.error(f"Version hook failed: {error_message}")
+            job_failed(
+                self.mqtt_client,
+                settings.broker.thing_name,
+                self.job.id_,
+                JobFailedStatus.VERSION_HOOK_FAILED.value,
+                message=error_message,
+            )
+            self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))
 
     def _ready_hook_event(self, event):
         if event.name == HOOK_RESULT:
-            self._installation_successful()
+            logger.info("Ready hook done")
+            job_succeeded(
+                self.mqtt_client,
+                settings.broker.thing_name,
+                self.job.id_,
+                JobSuccessStatus.COMPLETE_READY.value,
+            )
+            self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))
         else:
-            self._installation_failed()
-
-    def _installation_successful(self):
-        job_succeeded(
-            self.mqtt_client,
-            settings.broker.thing_name,
-            self.job.id_,
-            JobInternalStatus.SUCCESS_COMPLETE.value,
-        )
-        self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))
-
-    def _installation_failed(self):
-        job_failed(
-            self.mqtt_client,
-            settings.broker.thing_name,
-            self.job.id_,
-            JobInternalStatus.INSTALLATION_FAILED.value,
-        )
-        self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))
+            error_message = event.cargo[HOOK_MESSAGE]
+            logger.error(f"Ready hook failed: {error_message}")
+            job_failed(
+                self.mqtt_client,
+                settings.broker.thing_name,
+                self.job.id_,
+                JobFailedStatus.READY_HOOK_FAILED.value,
+                message=error_message,
+            )
+            self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))

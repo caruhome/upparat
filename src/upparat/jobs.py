@@ -37,26 +37,38 @@ class JobStatus(Enum):
 
 
 # Internal job state
-JOB_INTERNAL_STATUS = "internal_status"
+JOB_STATUS_DETAILS_STATE = "state"
+JOB_STATUS_DETAILS_MESSAGE = "message"
 
 
-class JobInternalStatus(Enum):
-    INITIAL = "initial"
-    DOWNLOAD = "download"
+class JobSuccessStatus(Enum):
+    VERSION_ALREADY_INSTALLED = "version_already_installed"
+    NO_INSTALLATION_HOOK_PROVIDED = "no_installation_hook_provided"
+    NO_RESTART_HOOK_PROVIDED = "no_restart_hook_provided"
+    COMPLETE_NO_VERSION_CHECK = "complete_no_version_check"
+    COMPLETE_NO_READY_CHECK = "complete_no_ready_check"
+    COMPLETE_READY = "complete_ready"
+
+
+class JobFailedStatus(Enum):
+    INSTALLATION_HOOK_FAILED = "installation_hook_failed"
+    RESTART_HOOK_FAILED = "restart_hook_failed"
+    VERSION_HOOK_FAILED = "version_hook_failed"
+    READY_HOOK_FAILED = "ready_hook_failed"
+    VERSION_MISMATCH = "version_mismatch"
+
+
+class JobProgressStatus(Enum):
+    DOWNLOAD_START = "download_start"
+    DOWNLOAD_PROGRESS = "download_progress"
+    DOWNLOAD_INTERRUPT = "download_interrupt"
 
     INSTALLATION_START = "installation_start"
-    INSTALLATION_BLOCKED = "installation_blocked"
-    INSTALLATION_DONE = "installation_done"
-    INSTALLATION_FAILED = "installation_failed"
+    INSTALLATION_PROGRESS = "installation_progress"
+    INSTALLATION_INTERRUPT = "installation_interrupt"
 
-    REBOOT_READY = "reboot_ready"
-    REBOOT_BLOCKED = "reboot_blocked"
-    REBOOT_INITIATED = "reboot_initiated"
-
-    SUCCESS_COMPLETE = "success_complete"
-    SUCCESS_ALREADY_INSTALLED = "success_already_installed"
-
-    ERROR_MULTIPLE_IN_PROGRESS = "error_multiple_in_progress"
+    REBOOT_START = "reboot_start"
+    REBOOT_INTERRUPT = "reboot_interrupt"
 
 
 def jobs_base(thing_name):
@@ -95,32 +107,35 @@ def describe_job_execution_response(thing_name, job_id, state_filter=None):
     return os.path.join(jobs_base(thing_name), job_id, "get", query)
 
 
-def job_update(mqtt_client, thing_name, job_id, status, internal_state):
+def job_update(mqtt_client, thing_name, job_id, status, state, message):
     mqtt_client.publish(
         update_job_execution(thing_name, job_id),
         json.dumps(
             {
                 JOB_STATUS: status,
-                JOB_STATUS_DETAILS: {JOB_INTERNAL_STATUS: internal_state},
+                JOB_STATUS_DETAILS: {
+                    JOB_STATUS_DETAILS_STATE: state,
+                    JOB_STATUS_DETAILS_MESSAGE: message or "none",
+                },
             }
         ),
     )
 
 
-def job_in_progress(mqtt_client, thing_name, job_id, internal_state):
+def job_in_progress(mqtt_client, thing_name, job_id, state, message=None):
     job_update(
-        mqtt_client, thing_name, job_id, JobStatus.IN_PROGRESS.value, internal_state
+        mqtt_client, thing_name, job_id, JobStatus.IN_PROGRESS.value, state, message
     )
 
 
-def job_succeeded(mqtt_client, thing_name, job_id, internal_state):
+def job_succeeded(mqtt_client, thing_name, job_id, state, message=None):
     job_update(
-        mqtt_client, thing_name, job_id, JobStatus.SUCCEEDED.value, internal_state
+        mqtt_client, thing_name, job_id, JobStatus.SUCCEEDED.value, state, message
     )
 
 
-def job_failed(mqtt_client, thing_name, job_id, internal_state):
-    job_update(mqtt_client, thing_name, job_id, JobStatus.FAILED.value, internal_state)
+def job_failed(mqtt_client, thing_name, job_id, state, message=None):
+    job_update(mqtt_client, thing_name, job_id, JobStatus.FAILED.value, state, message)
 
 
 def get_in_progress_job_ids(payload):
@@ -142,6 +157,6 @@ class Job:
         self.meta = meta
 
     @property
-    def internal_status(self):
+    def internal_state(self):
         if self.status_details:
-            return self.status_details[JOB_INTERNAL_STATUS]
+            return self.status_details[JOB_STATUS_DETAILS_STATE]

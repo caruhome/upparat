@@ -12,9 +12,12 @@ from upparat.events import JOB_INSTALLATION_DONE
 from upparat.events import JOB_REVOKED
 from upparat.events import JOB_VERIFIED
 from upparat.hooks import run_hook
+from upparat.jobs import job_failed
 from upparat.jobs import job_succeeded
-from upparat.jobs import JobInternalStatus
+from upparat.jobs import JobFailedStatus
+from upparat.jobs import JobProgressStatus
 from upparat.jobs import JobStatus
+from upparat.jobs import JobSuccessStatus
 from upparat.statemachine import JobProcessingState
 
 logger = logging.getLogger(__name__)
@@ -26,46 +29,48 @@ class VerifyJobState(JobProcessingState):
     """
 
     name = "verify_job"
-    stop_version_hook = threading.Event()
+
+    def __init__(self):
+        self.stop_version_hook = threading.Event()
+        super().__init__()
 
     def on_enter(self, state, event):
         if self.job.status == JobStatus.QUEUED.value:
             if self.job.force or not settings.hooks.version:
+                logger.info("Skip version check")
                 return self._job_verified()
+            logger.debug("Start version check")
             # Start version check
-            run_hook(
-                settings.hooks.version,
-                self.stop_version_hook,
-                self._version_hook_event,
-                args=[self.job.meta],
+            self.stop_version_hook = run_hook(
+                settings.hooks.version, self._version_hook_event, args=[self.job.meta]
             )
 
         elif self.job.status == JobStatus.IN_PROGRESS.value:
-            # If the installation is done check if the
-            # ongoing installation was successful
-            # todo: cleanup internal states
-            if self.job.internal_status in (
-                JobInternalStatus.INSTALLATION_DONE.value,
-                JobInternalStatus.REBOOT_READY.value,
-                JobInternalStatus.REBOOT_BLOCKED.value,
-                JobInternalStatus.REBOOT_INITIATED.value,
-            ):
+            # If the restart is initiated the installation is done
+            if self.job.internal_state == JobProgressStatus.REBOOT_START.value:
+                logger.info("Installation done")
                 self.publish(Event(JOB_INSTALLATION_DONE, **{JOB: self.job}))
             # Redo the whole update process
             else:
+                logger.info("Redo job process")
                 return self._job_verified()
         else:
             raise Exception(f"Unexpected job status: {self.job.status}")
 
     def on_exit(self, state, event):
-        self.stop_version_hook.set()
+        self._stop_hooks()
 
     def on_job_cancelled(self, state, event):
-        self.stop_version_hook.set()
+        self._stop_hooks()
         self.publish(pysm.Event(JOB_REVOKED))
+
+    def _stop_hooks(self):
+        if self.stop_version_hook:
+            self.stop_version_hook.set()
 
     def _version_hook_event(self, event):
         if event.name == HOOK_RESULT:
+            logger.debug("Version hook done")
             version = event.cargo[HOOK_MESSAGE]
             # Check if we do not already run on the version to be installed
             if self.job.version == version:
@@ -74,12 +79,23 @@ class VerifyJobState(JobProcessingState):
                     self.mqtt_client,
                     settings.broker.thing_name,
                     self.job.id_,
-                    JobInternalStatus.SUCCESS_ALREADY_INSTALLED.value,
+                    JobSuccessStatus.VERSION_ALREADY_INSTALLED.value,
                 )
                 return self.publish(Event(JOB_REVOKED))
             else:
+                logger.info(f"Running on version {version}. Install {self.job.version}")
                 return self._job_verified()
-        # todo: handle hook errors
+        else:
+            error_message = event.cargo[HOOK_MESSAGE]
+            logger.error(f"Version hook failed: {error_message}")
+            job_failed(
+                self.mqtt_client,
+                settings.broker.thing_name,
+                self.job.id_,
+                JobFailedStatus.VERSION_HOOK_FAILED.value,
+                message=error_message,
+            )
+            return self.publish(Event(JOB_REVOKED))
 
     def _job_verified(self):
         self.publish(Event(JOB_VERIFIED, **{JOB: self.job}))

@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from queue import Queue
 from urllib.error import HTTPError
@@ -115,7 +116,12 @@ def test_download_put_job_in_progress(mocker, download_state, urllib_urlopen_moc
     assert mqtt_client.publish.call_count == 1
     assert mqtt_client.publish.call_args == mocker.call(
         f"$aws/things/{expected_thing_name}/jobs/{expected_job_id}/update",
-        '{"status": "IN_PROGRESS", "statusDetails": {"internal_status": "download"}}',
+        json.dumps(
+            {
+                "status": "IN_PROGRESS",
+                "statusDetails": {"state": "download_start", "message": "none"},
+            }
+        ),
     )
 
     event = inbox.get(timeout=TIMEOUT)

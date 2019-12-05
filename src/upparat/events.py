@@ -15,9 +15,9 @@ DOWNLOAD_COMPLETED = "download-completed"
 DOWNLOAD_INTERRUPTED = "download-interrupted"
 
 INSTALLATION_DONE = "installation-done"
-INSTALLATION_ABORTED = "installation-aborted"
+INSTALLATION_INTERRUPTED = "installation-interrupted"
 
-RESTART_ABORTED = "restart-aborted"
+RESTART_INTERRUPTED = "restart-interrupted"
 
 # State machine event data
 JOB_EXECUTION_SUMMARIES = "job_execution_summaries"

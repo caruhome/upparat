@@ -14,7 +14,7 @@ from upparat.events import DOWNLOAD_COMPLETED
 from upparat.events import DOWNLOAD_INTERRUPTED
 from upparat.events import JOB
 from upparat.jobs import job_in_progress
-from upparat.jobs import JobInternalStatus
+from upparat.jobs import JobProgressStatus
 from upparat.statemachine import JobProcessingState
 
 logger = logging.getLogger(__name__)
@@ -106,7 +106,7 @@ class DownloadState(JobProcessingState):
             self.mqtt_client,
             settings.broker.thing_name,
             self.job.id_,
-            JobInternalStatus.DOWNLOAD.value,
+            JobProgressStatus.DOWNLOAD_START.value,
         )
 
         threading.Thread(
@@ -133,4 +133,10 @@ class DownloadState(JobProcessingState):
         self.publish(pysm.Event(DOWNLOAD_COMPLETED, **{JOB: self.job}))
 
     def _download_interrupted(self):
+        job_in_progress(
+            self.mqtt_client,
+            settings.broker.thing_name,
+            self.job.id_,
+            JobProgressStatus.DOWNLOAD_INTERRUPT.value,
+        )
         self.publish(pysm.Event(DOWNLOAD_INTERRUPTED))

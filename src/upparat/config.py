@@ -160,6 +160,8 @@ class Settings:
             verbose = args.verbose
 
         if config_file:
+            # Logger is not yet configured
+            print(f"Loading config from file: {config_file}")
             config.read(config_file)
 
         self.broker = _broker_section(config, thing_name)

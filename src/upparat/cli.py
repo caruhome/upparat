@@ -12,8 +12,8 @@ from upparat.events import DOWNLOAD_COMPLETED
 from upparat.events import DOWNLOAD_INTERRUPTED
 from upparat.events import ENTER
 from upparat.events import EXIT_SIGNAL_SENT
-from upparat.events import INSTALLATION_ABORTED
 from upparat.events import INSTALLATION_DONE
+from upparat.events import INSTALLATION_INTERRUPTED
 from upparat.events import JOB_INSTALLATION_COMPLETE
 from upparat.events import JOB_INSTALLATION_DONE
 from upparat.events import JOB_RESOURCE_NOT_FOUND
@@ -22,7 +22,7 @@ from upparat.events import JOB_SELECTED
 from upparat.events import JOB_VERIFIED
 from upparat.events import JOBS_AVAILABLE
 from upparat.events import NO_JOBS_PENDING
-from upparat.events import RESTART_ABORTED
+from upparat.events import RESTART_INTERRUPTED
 from upparat.mqtt import MQTT
 from upparat.statemachine import UpparatStateMachine
 from upparat.statemachine.download import DownloadState
@@ -116,7 +116,7 @@ def create_statemachine(event_queue, mqtt_client):
 
     # The job gets cancelled or installation fails
     statemachine.add_transition(
-        install_state, fetch_jobs_state, events=[INSTALLATION_ABORTED]
+        install_state, fetch_jobs_state, events=[INSTALLATION_INTERRUPTED]
     )
 
     # Installation is complete
@@ -126,7 +126,7 @@ def create_statemachine(event_queue, mqtt_client):
 
     # The job gets cancelled or restart fails
     statemachine.add_transition(
-        restart_state, fetch_jobs_state, events=[RESTART_ABORTED]
+        restart_state, fetch_jobs_state, events=[RESTART_INTERRUPTED]
     )
 
     statemachine.initialize()

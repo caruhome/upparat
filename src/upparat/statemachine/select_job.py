@@ -32,7 +32,7 @@ from upparat.jobs import JOB_MESSAGE
 from upparat.jobs import JOB_REJECTED
 from upparat.jobs import JOB_STATUS
 from upparat.jobs import JOB_STATUS_DETAILS
-from upparat.jobs import JobInternalStatus
+from upparat.jobs import JobProgressStatus
 from upparat.statemachine import BaseState
 
 logger = logging.getLogger(__name__)
@@ -69,7 +69,7 @@ class SelectJobState(BaseState):
                         self.mqtt_client,
                         settings.broker.thing_name,
                         job_id,
-                        JobInternalStatus.ERROR_MULTIPLE_IN_PROGRESS.value,
+                        JobProgressStatus.ERROR_MULTIPLE_IN_PROGRESS.value,
                     )
                 return self.publish(Event(NO_JOBS_PENDING))
             else:

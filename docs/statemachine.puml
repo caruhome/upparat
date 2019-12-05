@@ -1,5 +1,8 @@
 @startuml
 [*] --> fetch_jobs
+
+state verify_installation
+
 state fetch_jobs
 state monitor
 state select_job
@@ -7,7 +10,6 @@ state verify_job
 state download
 state install
 state restart
-state verify_installation
     fetch_jobs --> monitor: no-jobs-pending
     fetch_jobs --> select_job: jobs-available
     monitor --> select_job: jobs-available
@@ -19,7 +21,7 @@ state verify_installation
     verify_installation --> fetch_jobs: job-installation-complete
     download --> fetch_jobs: download-interrupted
     download --> install: download-completed
-    install --> fetch_jobs: installation-aborted
+    install --> fetch_jobs: installation-interrupted
     install --> restart: installation-done
-    restart --> fetch_jobs: restart-aborted
+    restart --> fetch_jobs: restart-interrupted
 @enduml
