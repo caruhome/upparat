@@ -9,9 +9,6 @@ from upparat.events import INSTALLATION_DONE
 from upparat.events import INSTALLATION_INTERRUPTED
 from upparat.events import JOB
 from upparat.hooks import run_hook
-from upparat.jobs import job_failed
-from upparat.jobs import job_in_progress
-from upparat.jobs import job_succeeded
 from upparat.jobs import JobFailedStatus
 from upparat.jobs import JobProgressStatus
 from upparat.jobs import JobSuccessStatus
@@ -31,12 +28,7 @@ class InstallState(JobProcessingState):
         # Start install hook
         if settings.hooks.install:
             logger.info("Start installation")
-            job_in_progress(
-                self.mqtt_client,
-                settings.broker.thing_name,
-                self.job.id_,
-                JobProgressStatus.INSTALLATION_START.value,
-            )
+            self.job_progress(JobProgressStatus.INSTALLATION_START.value)
             self.stop_install_hook = run_hook(
                 settings.hooks.install,
                 self._install_hook_event,
@@ -44,12 +36,7 @@ class InstallState(JobProcessingState):
             )
         else:
             logger.info("No installation hook provided")
-            job_succeeded(
-                self.mqtt_client,
-                settings.broker.thing_name,
-                self.job.id_,
-                JobSuccessStatus.NO_INSTALLATION_HOOK_PROVIDED.value,
-            )
+            self.job_succeeded(JobSuccessStatus.NO_INSTALLATION_HOOK_PROVIDED.value)
             self.publish(Event(INSTALLATION_INTERRUPTED))
 
     def on_job_cancelled(self, state, event):
@@ -70,11 +57,7 @@ class InstallState(JobProcessingState):
         else:
             error_message = event.cargo[HOOK_MESSAGE]
             logger.error(f"Installation failed: {error_message}")
-            job_failed(
-                self.mqtt_client,
-                settings.broker.thing_name,
-                self.job.id_,
-                JobFailedStatus.INSTALLATION_HOOK_FAILED.value,
-                message=error_message,
+            self.job_failed(
+                JobFailedStatus.INSTALLATION_HOOK_FAILED.value, message=error_message
             )
             self.publish(Event(INSTALLATION_INTERRUPTED))

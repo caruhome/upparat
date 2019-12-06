@@ -45,6 +45,7 @@ class JobSuccessStatus(Enum):
     VERSION_ALREADY_INSTALLED = "version_already_installed"
     NO_INSTALLATION_HOOK_PROVIDED = "no_installation_hook_provided"
     NO_RESTART_HOOK_PROVIDED = "no_restart_hook_provided"
+    COMPLETE_SOFT_RESTART = "complete_soft_restart"
     COMPLETE_NO_VERSION_CHECK = "complete_no_version_check"
     COMPLETE_NO_READY_CHECK = "complete_no_ready_check"
     COMPLETE_READY = "complete_ready"
@@ -120,22 +121,6 @@ def job_update(mqtt_client, thing_name, job_id, status, state, message):
             }
         ),
     )
-
-
-def job_in_progress(mqtt_client, thing_name, job_id, state, message=None):
-    job_update(
-        mqtt_client, thing_name, job_id, JobStatus.IN_PROGRESS.value, state, message
-    )
-
-
-def job_succeeded(mqtt_client, thing_name, job_id, state, message=None):
-    job_update(
-        mqtt_client, thing_name, job_id, JobStatus.SUCCEEDED.value, state, message
-    )
-
-
-def job_failed(mqtt_client, thing_name, job_id, state, message=None):
-    job_update(mqtt_client, thing_name, job_id, JobStatus.FAILED.value, state, message)
 
 
 def get_in_progress_job_ids(payload):

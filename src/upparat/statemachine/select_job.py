@@ -26,13 +26,14 @@ from upparat.jobs import JOB_DOCUMENT_FILE
 from upparat.jobs import JOB_DOCUMENT_FORCE
 from upparat.jobs import JOB_DOCUMENT_META
 from upparat.jobs import JOB_DOCUMENT_VERSION
-from upparat.jobs import job_failed
 from upparat.jobs import JOB_ID
 from upparat.jobs import JOB_MESSAGE
 from upparat.jobs import JOB_REJECTED
 from upparat.jobs import JOB_STATUS
 from upparat.jobs import JOB_STATUS_DETAILS
+from upparat.jobs import job_update
 from upparat.jobs import JobProgressStatus
+from upparat.jobs import JobStatus
 from upparat.statemachine import BaseState
 
 logger = logging.getLogger(__name__)
@@ -61,14 +62,14 @@ class SelectJobState(BaseState):
             in_progress_jobs_count = len(in_progress_jobs)
             if in_progress_jobs_count != 1:
                 job_ids = [job[JOB_ID] for job in in_progress_jobs]
-                nice_job_ids = ", ".join(job_ids)
-                logger.error(f"More than one job IN PROGRESS: {nice_job_ids}")
+                logger.error(f"More than one job IN PROGRESS: {', '.join(job_ids)}")
                 # Mark all in progress jobs as failed
                 for job_id in job_ids:
-                    job_failed(
+                    job_update(
                         self.mqtt_client,
                         settings.broker.thing_name,
                         job_id,
+                        JobStatus.FAILED.value,
                         JobProgressStatus.ERROR_MULTIPLE_IN_PROGRESS.value,
                     )
                 return self.publish(Event(NO_JOBS_PENDING))

@@ -124,7 +124,7 @@ def create_statemachine(event_queue, mqtt_client):
         install_state, restart_state, events=[INSTALLATION_DONE]
     )
 
-    # The job gets cancelled or restart fails
+    # The job gets cancelled, restart fails or soft restart
     statemachine.add_transition(
         restart_state, fetch_jobs_state, events=[RESTART_INTERRUPTED]
     )

@@ -11,9 +11,12 @@ ENV_S3_ROLE_ARN = "UPPARAT_TEST_ROLE_ARN"
 ENV_S3_BUCKET = "UPPARAT_TEST_BUCKET_NAME"
 ENV_S3_FILE = "UPPARAT_TEST_FILE"
 
+VERSION = "caru-version-0.4.7-2019-12-05-230622-f056dfa4UPPARAT-imx6ul-caru-v-1-2-0"
+
 
 def create_job(targets, s3_url, role_arn):
     job_id = str(uuid4())
+    role_arn = "arn:aws:iam::906041328358:role/iot_jobs_s3"
     iot_client.create_job(
         jobId=job_id,
         targets=targets,
@@ -21,7 +24,7 @@ def create_job(targets, s3_url, role_arn):
         document=json.dumps(
             {
                 "action": "update",
-                "version": "0.0.1",
+                "version": VERSION,
                 "file": f"${{aws:iot:s3-presigned-url:{s3_url}}}",
             }
         ),

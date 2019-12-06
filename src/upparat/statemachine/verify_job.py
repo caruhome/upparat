@@ -12,8 +12,6 @@ from upparat.events import JOB_INSTALLATION_DONE
 from upparat.events import JOB_REVOKED
 from upparat.events import JOB_VERIFIED
 from upparat.hooks import run_hook
-from upparat.jobs import job_failed
-from upparat.jobs import job_succeeded
 from upparat.jobs import JobFailedStatus
 from upparat.jobs import JobProgressStatus
 from upparat.jobs import JobStatus
@@ -75,12 +73,7 @@ class VerifyJobState(JobProcessingState):
             # Check if we do not already run on the version to be installed
             if self.job.version == version:
                 logger.info(f"Version {self.job.version} is already running.")
-                job_succeeded(
-                    self.mqtt_client,
-                    settings.broker.thing_name,
-                    self.job.id_,
-                    JobSuccessStatus.VERSION_ALREADY_INSTALLED.value,
-                )
+                self.job_succeeded(JobSuccessStatus.VERSION_ALREADY_INSTALLED.value)
                 return self.publish(Event(JOB_REVOKED))
             else:
                 logger.info(f"Running on version {version}. Install {self.job.version}")
@@ -88,12 +81,8 @@ class VerifyJobState(JobProcessingState):
         else:
             error_message = event.cargo[HOOK_MESSAGE]
             logger.error(f"Version hook failed: {error_message}")
-            job_failed(
-                self.mqtt_client,
-                settings.broker.thing_name,
-                self.job.id_,
-                JobFailedStatus.VERSION_HOOK_FAILED.value,
-                message=error_message,
+            self.job_failed(
+                JobFailedStatus.VERSION_HOOK_FAILED.value, message=error_message
             )
             return self.publish(Event(JOB_REVOKED))
 

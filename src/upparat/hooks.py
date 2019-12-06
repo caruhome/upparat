@@ -67,6 +67,7 @@ def run_hook(hook, callback, args=None):
     if not hook:
         return
 
+    logger.debug(f"Run hook {hook} with args {' '.join(args)}")
     stop_event = threading.Event()
 
     threading.Thread(

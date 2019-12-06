@@ -16,6 +16,8 @@ from upparat.events import MQTT_EVENT_PAYLOAD
 from upparat.events import MQTT_EVENT_TOPIC
 from upparat.events import MQTT_MESSAGE_RECEIVED
 from upparat.jobs import get_in_progress_job_ids
+from upparat.jobs import job_update
+from upparat.jobs import JobStatus
 from upparat.jobs import pending_jobs_response
 from upparat.mqtt import MQTT
 
@@ -120,6 +122,36 @@ class BaseState(State):
 class JobProcessingState(BaseState):
     job = None
     pending_jobs_response = None
+
+    def job_succeeded(self, state, message=None):
+        job_update(
+            self.mqtt_client,
+            settings.broker.thing_name,
+            self.job.id_,
+            JobStatus.SUCCEEDED.value,
+            state,
+            message,
+        )
+
+    def job_failed(self, state, message=None):
+        job_update(
+            self.mqtt_client,
+            settings.broker.thing_name,
+            self.job.id_,
+            JobStatus.FAILED.value,
+            state,
+            message,
+        )
+
+    def job_progress(self, state, message=None):
+        job_update(
+            self.mqtt_client,
+            settings.broker.thing_name,
+            self.job.id_,
+            JobStatus.IN_PROGRESS.value,
+            state,
+            message,
+        )
 
     def _setup_job_processing(self, state, event):
         self.job = event.cargo["source_event"].cargo[JOB]
