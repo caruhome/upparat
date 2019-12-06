@@ -14,15 +14,10 @@ from upparat.events import HOOK_TIMED_OUT
 logger = logging.getLogger(__name__)
 
 
-def _hook(hook, stop_event, callback, args=None):
+def _hook(hook, stop_event, callback, args):
     retry = 0
     max_retries = settings.hooks.max_retries
     retry_interval = settings.hooks.retry_interval
-
-    if not args:
-        args = []
-    else:
-        args = [arg if arg else "" for arg in args]
 
     while retry < max_retries and not stop_event.is_set():
         try:
@@ -67,7 +62,12 @@ def run_hook(hook, callback, args=None):
     if not hook:
         return
 
-    logger.debug(f"Run hook {hook} with args {' '.join(args)}")
+    if not args:
+        args = []
+    else:
+        args = [arg if arg else "" for arg in args]
+
+    logger.debug(f"Run hook: {hook} {' '.join(args)}")
     stop_event = threading.Event()
 
     threading.Thread(
