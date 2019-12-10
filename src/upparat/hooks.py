@@ -14,16 +14,20 @@ from upparat.events import HOOK_TIMED_OUT
 logger = logging.getLogger(__name__)
 
 
-def _hook(hook, stop_event, callback, args):
+def _hook(hook, stop_event, callback, args: list):
+    """
+    todo: should this be interruptable even during the retry_interval?
+    """
     retry = 0
     max_retries = settings.hooks.max_retries
     retry_interval = settings.hooks.retry_interval
 
+    first_call = int(time.time())
+
     while retry < max_retries and not stop_event.is_set():
         try:
-            # todo pass initial timestamp as 2nd arg and retry count as 3rd
             result = subprocess.run(
-                [hook] + args,
+                [hook, first_call, retry] + args,
                 check=True,
                 stdout=subprocess.PIPE,
                 universal_newlines=True,
@@ -58,19 +62,19 @@ def _hook(hook, stop_event, callback, args):
                 break
 
 
-def run_hook(hook, callback, args=None):
+def run_hook(hook, callback, args=None, join=False):
     if not hook:
         return
 
     if not args:
         args = []
     else:
-        args = [arg if arg else "" for arg in args]
+        args = [str(arg) if arg else "" for arg in args]
 
     logger.debug(f"Run hook: {hook} {' '.join(args)}")
     stop_event = threading.Event()
 
-    threading.Thread(
+    hook_runner = threading.Thread(
         daemon=True,
         target=_hook,
         kwargs={
@@ -79,6 +83,10 @@ def run_hook(hook, callback, args=None):
             "stop_event": stop_event,
             "callback": callback,
         },
-    ).start()
+    )
+    hook_runner.start()
+
+    if join:
+        hook_runner.join()
 
     return stop_event
