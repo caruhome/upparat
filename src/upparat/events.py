@@ -39,7 +39,12 @@ MQTT_EVENT_PAYLOAD = "payload"
 EXIT_SIGNAL_SENT = "exit-signal"
 
 # Hooks
-HOOK_RESULT = "hook-result"
-HOOK_TIMED_OUT = "hook-timed-out"
-HOOK_FAILED = "hook-failed"
-HOOK_MESSAGE = "message"
+HOOK = "hook"
+HOOK_COMMAND = "hook-command"
+HOOK_STATUS = "hook-status"
+HOOK_MESSAGE = "hook-message"
+
+HOOK_STATUS_COMPLETED = "hook-completed"
+HOOK_STATUS_OUTPUT = "hook-output"
+HOOK_STATUS_TIMED_OUT = "hook-timed-out"
+HOOK_STATUS_FAILED = "hook-failed"

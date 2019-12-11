@@ -3,8 +3,14 @@ import logging
 from pysm import Event
 
 from upparat.config import settings
+from upparat.events import HOOK
+from upparat.events import HOOK_COMMAND
 from upparat.events import HOOK_MESSAGE
-from upparat.events import HOOK_RESULT
+from upparat.events import HOOK_STATUS
+from upparat.events import HOOK_STATUS_COMPLETED
+from upparat.events import HOOK_STATUS_FAILED
+from upparat.events import HOOK_STATUS_OUTPUT
+from upparat.events import HOOK_STATUS_TIMED_OUT
 from upparat.events import INSTALLATION_DONE
 from upparat.events import INSTALLATION_INTERRUPTED
 from upparat.events import JOB
@@ -31,7 +37,7 @@ class InstallState(JobProcessingState):
             self.job_progress(JobProgressStatus.INSTALLATION_START.value)
             self.stop_install_hook = run_hook(
                 settings.hooks.install,
-                self._install_hook_event,
+                self.root_machine.inbox,
                 args=[self.job.meta, str(self.job.file_path)],
             )
         else:
@@ -46,15 +52,29 @@ class InstallState(JobProcessingState):
     def on_exit(self, state, event):
         self._stop_hooks()
 
+    def event_handlers(self):
+        return {HOOK: self._install_hook_event}
+
     def _stop_hooks(self):
         if self.stop_install_hook:
             self.stop_install_hook.set()
 
-    def _install_hook_event(self, event):
-        if event.name == HOOK_RESULT:
+    def _install_hook_event(self, _, event):
+        # Only handle install hook events
+        if event.cargo[HOOK_COMMAND] != settings.hooks.install:
+            return
+
+        status = event.cargo[HOOK_STATUS]
+
+        if status == HOOK_STATUS_COMPLETED:
             logger.info("Installation hook done")
             self.publish(Event(INSTALLATION_DONE, **{JOB: self.job}))
-        else:
+        elif status == HOOK_STATUS_OUTPUT:
+            self.job_progress(
+                JobProgressStatus.INSTALLATION_PROGRESS.value,
+                message=event.cargo[HOOK_MESSAGE],
+            )
+        elif status in (HOOK_STATUS_FAILED, HOOK_STATUS_TIMED_OUT):
             error_message = event.cargo[HOOK_MESSAGE]
             logger.error(f"Installation failed: {error_message}")
             self.job_failed(

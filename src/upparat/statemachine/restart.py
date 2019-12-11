@@ -3,8 +3,13 @@ import logging
 from pysm import Event
 
 from upparat.config import settings
+from upparat.events import HOOK
+from upparat.events import HOOK_COMMAND
 from upparat.events import HOOK_MESSAGE
-from upparat.events import HOOK_RESULT
+from upparat.events import HOOK_STATUS
+from upparat.events import HOOK_STATUS_COMPLETED
+from upparat.events import HOOK_STATUS_FAILED
+from upparat.events import HOOK_STATUS_TIMED_OUT
 from upparat.events import RESTART_INTERRUPTED
 from upparat.hooks import run_hook
 from upparat.jobs import JobFailedStatus
@@ -28,7 +33,7 @@ class RestartState(JobProcessingState):
             self.job_progress(JobProgressStatus.REBOOT_START.value)
             self.stop_restart_hook = run_hook(
                 settings.hooks.restart,
-                self._restart_hook_event,
+                self.root_machine.inbox,
                 args=[self.job.meta, str(self.job.file_path)],
             )
         else:
@@ -43,19 +48,26 @@ class RestartState(JobProcessingState):
     def on_exit(self, state, event):
         self._stop_hooks()
 
+    def event_handlers(self):
+        return {HOOK: self._restart_hook_event}
+
     def _stop_hooks(self):
         if self.stop_restart_hook:
             self.stop_restart_hook.set()
 
-    def _restart_hook_event(self, event):
-        if event.name == HOOK_RESULT:
+    def _restart_hook_event(self, _, event):
+        # Only handle restart hook events
+        if event.cargo[HOOK_COMMAND] != settings.hooks.restart:
+            return
+
+        status = event.cargo[HOOK_STATUS]
+
+        if status == HOOK_STATUS_COMPLETED:
             logger.info("Restart hook done")
             self.job_succeeded(JobSuccessStatus.COMPLETE_SOFT_RESTART.value)
             self.publish(Event(RESTART_INTERRUPTED))
-        else:
-            error_message = event.cargo[HOOK_MESSAGE]
-            logger.error(f"Restart failed: {error_message}")
-            self.job_failed(
-                JobFailedStatus.RESTART_HOOK_FAILED.value, message=error_message
-            )
+        elif status in (HOOK_STATUS_FAILED, HOOK_STATUS_TIMED_OUT):
+            message = event.cargo[HOOK_MESSAGE]
+            logger.error(f"Restart failed: {message}")
+            self.job_failed(JobFailedStatus.RESTART_HOOK_FAILED.value, message=message)
             self.publish(Event(RESTART_INTERRUPTED))

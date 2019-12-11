@@ -5,8 +5,13 @@ from pysm import Event
 from pysm import pysm
 
 from upparat.config import settings
+from upparat.events import HOOK
+from upparat.events import HOOK_COMMAND
 from upparat.events import HOOK_MESSAGE
-from upparat.events import HOOK_RESULT
+from upparat.events import HOOK_STATUS
+from upparat.events import HOOK_STATUS_COMPLETED
+from upparat.events import HOOK_STATUS_FAILED
+from upparat.events import HOOK_STATUS_TIMED_OUT
 from upparat.events import JOB
 from upparat.events import JOB_INSTALLATION_DONE
 from upparat.events import JOB_REVOKED
@@ -40,7 +45,7 @@ class VerifyJobState(JobProcessingState):
             logger.debug("Start version check")
             # Start version check
             self.stop_version_hook = run_hook(
-                settings.hooks.version, self._version_hook_event, args=[self.job.meta]
+                settings.hooks.version, self.root_machine.inbox, args=[self.job.meta]
             )
 
         elif self.job.status == JobStatus.IN_PROGRESS.value:
@@ -62,12 +67,21 @@ class VerifyJobState(JobProcessingState):
         self._stop_hooks()
         self.publish(pysm.Event(JOB_REVOKED))
 
+    def event_handlers(self):
+        return {HOOK: self._version_hook_event}
+
     def _stop_hooks(self):
         if self.stop_version_hook:
             self.stop_version_hook.set()
 
-    def _version_hook_event(self, event):
-        if event.name == HOOK_RESULT:
+    def _version_hook_event(self, _, event):
+        # Only handle version hook events
+        if event.cargo[HOOK_COMMAND] != settings.hooks.version:
+            return
+
+        status = event.cargo[HOOK_STATUS]
+
+        if status == HOOK_STATUS_COMPLETED:
             logger.debug("Version hook done")
             version = event.cargo[HOOK_MESSAGE]
             # Check if we do not already run on the version to be installed
@@ -78,7 +92,7 @@ class VerifyJobState(JobProcessingState):
             else:
                 logger.info(f"Running on version {version}. Install {self.job.version}")
                 return self._job_verified()
-        else:
+        elif status in (HOOK_STATUS_FAILED, HOOK_STATUS_TIMED_OUT):
             error_message = event.cargo[HOOK_MESSAGE]
             logger.error(f"Version hook failed: {error_message}")
             self.job_failed(

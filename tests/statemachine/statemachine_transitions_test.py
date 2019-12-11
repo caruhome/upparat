@@ -7,11 +7,11 @@ from upparat.cli import create_statemachine
 from upparat.events import DOWNLOAD_COMPLETED
 from upparat.events import DOWNLOAD_INTERRUPTED
 from upparat.events import JOB
-from upparat.events import SELECT_JOB_INTERRUPTED
 from upparat.events import JOB_SELECTED
 from upparat.events import JOB_VERIFIED
 from upparat.events import JOBS_AVAILABLE
 from upparat.events import NO_JOBS_PENDING
+from upparat.events import SELECT_JOB_INTERRUPTED
 from upparat.jobs import Job
 from upparat.jobs import JobStatus
 from upparat.statemachine.download import DownloadState

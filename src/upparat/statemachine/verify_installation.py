@@ -3,8 +3,13 @@ import logging
 from pysm import pysm
 
 from upparat.config import settings
+from upparat.events import HOOK
+from upparat.events import HOOK_COMMAND
 from upparat.events import HOOK_MESSAGE
-from upparat.events import HOOK_RESULT
+from upparat.events import HOOK_STATUS
+from upparat.events import HOOK_STATUS_COMPLETED
+from upparat.events import HOOK_STATUS_FAILED
+from upparat.events import HOOK_STATUS_TIMED_OUT
 from upparat.events import JOB_INSTALLATION_COMPLETE
 from upparat.hooks import run_hook
 from upparat.jobs import JobFailedStatus
@@ -31,7 +36,7 @@ class VerifyInstallationState(JobProcessingState):
             # Start version check
             logger.debug("Start version check")
             self.stop_version_hook = run_hook(
-                settings.hooks.version, self._version_hook_event, args=[self.job.meta]
+                settings.hooks.version, self.root_machine.inbox, args=[self.job.meta]
             )
 
     def on_exit(self, state, event):
@@ -41,14 +46,26 @@ class VerifyInstallationState(JobProcessingState):
         self._stop_hooks()
         self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))
 
+    def event_handlers(self):
+        return {HOOK: self._handle_hooks}
+
     def _stop_hooks(self):
         if self.stop_version_hook:
             self.stop_version_hook.set()
         if self.stop_ready_hook:
             self.stop_ready_hook.set()
 
+    def _handle_hooks(self, _, event):
+        command = event.cargo[HOOK_COMMAND]
+        if command == settings.hooks.version:
+            self._version_hook_event(event)
+        elif command == settings.hooks.ready:
+            self._ready_hook_event(event)
+
     def _version_hook_event(self, event):
-        if event.name == HOOK_RESULT:
+        status = event.cargo[HOOK_STATUS]
+
+        if status == HOOK_STATUS_COMPLETED:
             version = event.cargo[HOOK_MESSAGE]
             if self.job.version == version:
                 if settings.hooks.ready:
@@ -56,7 +73,7 @@ class VerifyInstallationState(JobProcessingState):
                     # Start ready check
                     self.stop_ready_hook = run_hook(
                         settings.hooks.ready,
-                        self._ready_hook_event,
+                        self.root_machine.inbox,
                         args=[self.job.meta],
                     )
                 else:
@@ -66,7 +83,7 @@ class VerifyInstallationState(JobProcessingState):
             else:
                 self.job_failed(JobFailedStatus.VERSION_MISMATCH.value, message=version)
                 self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))
-        else:
+        elif status in (HOOK_STATUS_FAILED, HOOK_STATUS_TIMED_OUT):
             error_message = event.cargo[HOOK_MESSAGE]
             logger.error(f"Version hook failed: {error_message}")
             self.job_failed(
@@ -75,7 +92,7 @@ class VerifyInstallationState(JobProcessingState):
             self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))
 
     def _ready_hook_event(self, event):
-        if event.name == HOOK_RESULT:
+        if event.cargo[HOOK_STATUS] == HOOK_STATUS_COMPLETED:
             logger.info("Ready hook done")
             self.job_succeeded(JobSuccessStatus.COMPLETE_READY.value)
             self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))

@@ -11,7 +11,8 @@ ENV_S3_ROLE_ARN = "UPPARAT_TEST_ROLE_ARN"
 ENV_S3_BUCKET = "UPPARAT_TEST_BUCKET_NAME"
 ENV_S3_FILE = "UPPARAT_TEST_FILE"
 
-VERSION = "caru-version-0.4.7-2019-12-05-230622-f056dfa4UPPARAT-imx6ul-caru-v-1-2-0"
+VERSION = "caru-version-0.4.7-2019-12-09-083802-7176029fUPPARAT-imx6ul-caru-v-1-2-0"
+VERSION_OLD = "caru-version-0.4.6-2019-12-06-134413-e463289bUPPARAT-imx6ul-caru-v-1-2-0"
 
 
 def create_job(targets, s3_url, role_arn):
@@ -24,7 +25,7 @@ def create_job(targets, s3_url, role_arn):
         document=json.dumps(
             {
                 "action": "update",
-                "version": VERSION,
+                "version": VERSION_OLD,
                 "file": f"${{aws:iot:s3-presigned-url:{s3_url}}}",
             }
         ),
@@ -45,6 +46,6 @@ if __name__ == "__main__":
     s3_file = os.environ.get(ENV_S3_FILE)
     s3_bucket_name = os.environ.get(ENV_S3_BUCKET)
 
-    s3_object_url = f"https://{s3_bucket_name}.s3.amazonaws.com/{s3_file}"
+    s3_object_url = f"https://caru-firmware-legacy.s3.amazonaws.com/{s3_file}"
 
     create_job(things, s3_object_url, s3_role_arn)

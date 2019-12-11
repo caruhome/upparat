@@ -1,7 +1,5 @@
 import json
-from pathlib import Path
 from queue import Queue
-from urllib.error import HTTPError
 
 import pytest
 
@@ -94,22 +92,37 @@ def test_more_than_one_job_in_progress(select_job_state, create_event, mocker):
     # as failed an have no pending jobs
     published_event = inbox.get_nowait()
     assert published_event.name == SELECT_JOB_INTERRUPTED
-    assert state.current_job_id == None
+    assert state.current_job_id is None
 
     # check that all we mark all as failed via mqtt
     assert mqtt_client.publish.call_count == 2
     assert mqtt_client.publish.call_args_list == [
         mocker.call(
             f"$aws/things/bobby/jobs/{job_id_1}/update",
-            f'{{"status": "{JobStatus.FAILED.value}", "statusDetails": {{"state": "{JobProgressStatus.ERROR_MULTIPLE_IN_PROGRESS.value}", "message": "More than one job IN PROGRESS: 1, 2"}}}}',
+            json.dumps(
+                {
+                    "status": JobStatus.FAILED.value,
+                    "statusDetails": {
+                        "state": JobProgressStatus.ERROR_MULTIPLE_IN_PROGRESS.value,
+                        "message": "More than one job IN PROGRESS: 1, 2",
+                    },
+                }
+            ),
         ),
         mocker.call(
             f"$aws/things/bobby/jobs/{job_id_2}/update",
-            f'{{"status": "{JobStatus.FAILED.value}", "statusDetails": {{"state": "{JobProgressStatus.ERROR_MULTIPLE_IN_PROGRESS.value}", "message": "More than one job IN PROGRESS: 1, 2"}}}}',
+            json.dumps(
+                {
+                    "status": JobStatus.FAILED.value,
+                    "statusDetails": {
+                        "state": JobProgressStatus.ERROR_MULTIPLE_IN_PROGRESS.value,
+                        "message": "More than one job IN PROGRESS: 1, 2",
+                    },
+                }
+            ),
         ),
     ]
 
 
 def test_multiple_jobs_in_queued(select_job_state, create_event, mocker):
     assert True  # nach em esse :D
-

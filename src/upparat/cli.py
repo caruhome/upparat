@@ -16,13 +16,13 @@ from upparat.events import INSTALLATION_DONE
 from upparat.events import INSTALLATION_INTERRUPTED
 from upparat.events import JOB_INSTALLATION_COMPLETE
 from upparat.events import JOB_INSTALLATION_DONE
-from upparat.events import SELECT_JOB_INTERRUPTED
 from upparat.events import JOB_REVOKED
 from upparat.events import JOB_SELECTED
 from upparat.events import JOB_VERIFIED
 from upparat.events import JOBS_AVAILABLE
 from upparat.events import NO_JOBS_PENDING
 from upparat.events import RESTART_INTERRUPTED
+from upparat.events import SELECT_JOB_INTERRUPTED
 from upparat.mqtt import MQTT
 from upparat.statemachine import UpparatStateMachine
 from upparat.statemachine.download import DownloadState

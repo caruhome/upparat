@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Installs the provided file
 #
-# $1: meta from job document
-# $2: file location
+# $1: timestamp from first call
+# $2: retry count
+# $3: meta from job document
+# $4: file location
 
 echo "Installing"
 sleep 1
@@ -11,5 +13,5 @@ sleep 1
 echo  "50%"
 sleep 1
 echo "100%"
-cp $2 /tmp/demo.install
+cp $4 /tmp/demo.install
 echo "Done!"

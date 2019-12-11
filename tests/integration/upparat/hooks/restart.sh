@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
-# Gets the system version
+# Installs the provided file
 #
 # $1: timestamp from first call
 # $2: retry count
 # $3: meta from job document
 
-if [[ $1 = "same" ]]; then
-   echo "0.0.1"
-else
-   echo "0.0.0"
-fi
+
+echo "Restarting"
+sleep 60
