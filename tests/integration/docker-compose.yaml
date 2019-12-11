@@ -15,6 +15,7 @@ services:
     command: --verbose --config /config/config.ini
     volumes:
       - ./upparat/config.ini:/config/config.ini
+      - ./upparat/hooks/:/hooks/
       - ./upparat/tmp:/tmp
       # make sure to not mount over .egginfo in /app/upparat
       - ../../src/upparat:/app/upparat/src/upparat
