@@ -9,13 +9,12 @@ from upparat.events import JOB
 from upparat.events import JOB_EXECUTION_SUMMARIES
 from upparat.events import JOB_EXECUTION_SUMMARIES_PROGRESS
 from upparat.events import JOB_EXECUTION_SUMMARIES_QUEUED
-from upparat.events import JOB_RESOURCE_NOT_FOUND
 from upparat.events import JOB_SELECTED
 from upparat.events import MQTT_EVENT_PAYLOAD
 from upparat.events import MQTT_EVENT_TOPIC
 from upparat.events import MQTT_MESSAGE_RECEIVED
 from upparat.events import MQTT_SUBSCRIBED
-from upparat.events import NO_JOBS_PENDING
+from upparat.events import JOB_RESOURCE_NOT_FOUND
 from upparat.jobs import describe_job_execution
 from upparat.jobs import describe_job_execution_response
 from upparat.jobs import EXECUTION
@@ -77,7 +76,7 @@ class SelectJobState(BaseState):
                         JobProgressStatus.ERROR_MULTIPLE_IN_PROGRESS.value,
                         error_description,
                     )
-                return self.publish(Event(NO_JOBS_PENDING))
+                return self.publish(Event(JOB_RESOURCE_NOT_FOUND))
             else:
                 self.current_job_id = in_progress_jobs[0][JOB_ID]
                 logger.debug(f"Job execution in progress: {self.current_job_id}")
@@ -89,7 +88,7 @@ class SelectJobState(BaseState):
         # No pending job executions
         else:
             logger.error("No job executions available.")
-            return self.publish(Event(NO_JOBS_PENDING))
+            return self.publish(Event(JOB_RESOURCE_NOT_FOUND))
 
         # Subscribe to current job description
         self.describe_job_execution_response = describe_job_execution_response(

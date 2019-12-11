@@ -9,6 +9,7 @@ JOB_INSTALLATION_DONE = "job-installation-done"
 JOB_INSTALLATION_COMPLETE = "job-installation-complete"
 JOB_VERIFIED = "job-verified"
 JOB_REVOKED = "job-revoked"
+
 JOB_RESOURCE_NOT_FOUND = "job-resource-not-found"
 
 DOWNLOAD_COMPLETED = "download-completed"
