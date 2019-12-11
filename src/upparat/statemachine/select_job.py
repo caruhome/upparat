@@ -62,7 +62,11 @@ class SelectJobState(BaseState):
             in_progress_jobs_count = len(in_progress_jobs)
             if in_progress_jobs_count != 1:
                 job_ids = [job[JOB_ID] for job in in_progress_jobs]
-                logger.error(f"More than one job IN PROGRESS: {', '.join(job_ids)}")
+                error_description = (
+                    f"More than one job IN PROGRESS: {', '.join(job_ids)}"
+                )
+                logger.error(error_description)
+
                 # Mark all in progress jobs as failed
                 for job_id in job_ids:
                     job_update(
@@ -71,6 +75,7 @@ class SelectJobState(BaseState):
                         job_id,
                         JobStatus.FAILED.value,
                         JobProgressStatus.ERROR_MULTIPLE_IN_PROGRESS.value,
+                        error_description,
                     )
                 return self.publish(Event(NO_JOBS_PENDING))
             else:

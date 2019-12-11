@@ -54,3 +54,5 @@ tests/integration/mosquitto/aws-bridge.conf
 # Upparat
 tests/integration/upparat/config.ini
 tests/integration/upparat/tmp
+
+.DS_Store
