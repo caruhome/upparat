@@ -111,7 +111,7 @@ def describe_job_execution_response(thing_name, job_id, state_filter=None):
     return os.path.join(jobs_base(thing_name), job_id, "get", query)
 
 
-def job_update(mqtt_client, thing_name, job_id, status, state, message = None):
+def job_update(mqtt_client, thing_name, job_id, status, state, message=None):
     mqtt_client.publish(
         update_job_execution(thing_name, job_id),
         json.dumps(

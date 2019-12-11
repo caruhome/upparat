@@ -16,7 +16,7 @@ from upparat.events import INSTALLATION_DONE
 from upparat.events import INSTALLATION_INTERRUPTED
 from upparat.events import JOB_INSTALLATION_COMPLETE
 from upparat.events import JOB_INSTALLATION_DONE
-from upparat.events import JOB_RESOURCE_NOT_FOUND
+from upparat.events import SELECT_JOB_INTERRUPTED
 from upparat.events import JOB_REVOKED
 from upparat.events import JOB_SELECTED
 from upparat.events import JOB_VERIFIED
@@ -82,7 +82,7 @@ def create_statemachine(event_queue, mqtt_client):
 
     # Pending jobs got modified (rejected) meanwhile
     statemachine.add_transition(
-        select_job_state, fetch_jobs_state, events=[JOB_RESOURCE_NOT_FOUND]
+        select_job_state, fetch_jobs_state, events=[SELECT_JOB_INTERRUPTED]
     )
 
     # Job is ready for process

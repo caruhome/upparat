@@ -7,7 +7,7 @@ from upparat.cli import create_statemachine
 from upparat.events import DOWNLOAD_COMPLETED
 from upparat.events import DOWNLOAD_INTERRUPTED
 from upparat.events import JOB
-from upparat.events import JOB_RESOURCE_NOT_FOUND
+from upparat.events import SELECT_JOB_INTERRUPTED
 from upparat.events import JOB_SELECTED
 from upparat.events import JOB_VERIFIED
 from upparat.events import JOBS_AVAILABLE
@@ -114,7 +114,7 @@ def test_transition_monitor_to_prepare_on_jobs(monitor_state):
 # the job description, then we get an "resource not found" response.
 def test_transition_prepare_to_fetch_on_job_deleted(select_job_state):
     statemachine, _ = select_job_state
-    statemachine.dispatch(Event(JOB_RESOURCE_NOT_FOUND))
+    statemachine.dispatch(Event(SELECT_JOB_INTERRUPTED))
     assert isinstance(statemachine.state, FetchJobsState)
 
 

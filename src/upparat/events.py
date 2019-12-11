@@ -10,7 +10,7 @@ JOB_INSTALLATION_COMPLETE = "job-installation-complete"
 JOB_VERIFIED = "job-verified"
 JOB_REVOKED = "job-revoked"
 
-JOB_RESOURCE_NOT_FOUND = "job-resource-not-found"
+SELECT_JOB_INTERRUPTED = "selected-job-interrupted"
 
 DOWNLOAD_COMPLETED = "download-completed"
 DOWNLOAD_INTERRUPTED = "download-interrupted"

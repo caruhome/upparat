@@ -6,7 +6,7 @@ from urllib.error import HTTPError
 import pytest
 
 from upparat.config import settings
-from upparat.events import JOB_RESOURCE_NOT_FOUND
+from upparat.events import SELECT_JOB_INTERRUPTED
 from upparat.jobs import JobProgressStatus
 from upparat.jobs import JobStatus
 from upparat.statemachine import UpparatStateMachine
@@ -53,7 +53,7 @@ def test_no_pending_jobs(select_job_state, create_event, mocker):
 
     published_event = inbox.get_nowait()
 
-    assert published_event.name == JOB_RESOURCE_NOT_FOUND
+    assert published_event.name == SELECT_JOB_INTERRUPTED
 
 
 def test_exactly_one_job_in_progress(select_job_state, create_event, mocker):
@@ -93,7 +93,7 @@ def test_more_than_one_job_in_progress(select_job_state, create_event, mocker):
     # thus we mark all the jobs in progress
     # as failed an have no pending jobs
     published_event = inbox.get_nowait()
-    assert published_event.name == JOB_RESOURCE_NOT_FOUND
+    assert published_event.name == SELECT_JOB_INTERRUPTED
     assert state.current_job_id == None
 
     # check that all we mark all as failed via mqtt
