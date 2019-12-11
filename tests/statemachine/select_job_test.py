@@ -111,5 +111,19 @@ def test_more_than_one_job_in_progress(select_job_state, create_event, mocker):
 
 
 def test_multiple_jobs_in_queued(select_job_state, create_event, mocker):
-    assert True  # nach em esse :D
+    """ make sure oldest gets selected first """
+    state, inbox, mqtt_client, _ = select_job_state
 
+    oldest_job_id = "42"
+
+    jobs_queued = [
+        {"jobId": 1, "queuedAt": 100},
+        {"jobId": oldest_job_id, "queuedAt": 1},
+        {"jobId": 2, "queuedAt": 101},
+    ]
+
+    event = create_event(jobs_queued=jobs_queued, jobs_in_progress=[])
+
+    state.on_enter(None, event)
+
+    assert state.current_job_id == oldest_job_id
