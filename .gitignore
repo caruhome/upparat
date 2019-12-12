@@ -42,6 +42,10 @@ venv.bak/
 # Tools
 .vim/
 .idea/
+Session.vim
+
+# MacOS
+.DS_Store
 
 # Integration Tests
 
@@ -54,5 +58,3 @@ tests/integration/mosquitto/aws-bridge.conf
 # Upparat
 tests/integration/upparat/config.ini
 tests/integration/upparat/tmp
-
-.DS_Store
