@@ -59,6 +59,8 @@ def _hook(hook, stop_event, inbox: Queue, args: list):
             return_code = process.poll()
 
             if return_code == RETRY_EXIT_CODE:
+                # todo: check if last_line contains a custom timeout and use this
+                #       as the sleep duration.
                 logger.debug(f"Retry '{hook}'")
                 time.sleep(retry_interval)
                 retry += 1
