@@ -77,6 +77,7 @@ def test_no_pending_jobs(select_job_state, create_enter_event, mocker):
     published_event = inbox.get_nowait()
 
     assert published_event.name == SELECT_JOB_INTERRUPTED
+    assert inbox.empty()
 
 
 def test_exactly_one_job_in_progress(select_job_state, create_enter_event, mocker):
@@ -117,6 +118,7 @@ def test_more_than_one_job_in_progress(select_job_state, create_enter_event, moc
     # as failed an have no pending jobs
     published_event = inbox.get_nowait()
     assert published_event.name == SELECT_JOB_INTERRUPTED
+    assert inbox.empty()
     assert state.current_job_id is None
 
     # check that all we mark all as failed via mqtt
@@ -169,6 +171,7 @@ def test_on_message_rejected_job(select_job_state, create_mqtt_message_event):
 
     published_event = inbox.get_nowait()
     assert published_event.name == SELECT_JOB_INTERRUPTED
+    assert inbox.empty()
 
 
 def test_on_message_accepted_job(select_job_state, create_mqtt_message_event):
@@ -206,6 +209,7 @@ def test_on_message_accepted_job(select_job_state, create_mqtt_message_event):
 
     published_event = inbox.get_nowait()
     assert published_event.name == JOB_SELECTED
+    assert inbox.empty()
 
     job = published_event.cargo["job"]
     assert type(job) == Job
