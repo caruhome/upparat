@@ -54,7 +54,7 @@ def test_stop_event(mocker):
 
 
 def test_subprocess_args(mocker):
-    mock = _subprocess_mock(mocker, [], [])
+    mock = _subprocess_mock(mocker, [0], [])
 
     command = "noop"
     start_time = 1520294400  # "2018-03-06"
