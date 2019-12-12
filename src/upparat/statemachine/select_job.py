@@ -76,7 +76,7 @@ class SelectJobState(BaseState):
                         JobProgressStatus.ERROR_MULTIPLE_IN_PROGRESS.value,
                         error_description,
                     )
-                return self.publish(Event(SELECT_JOB_INTERRUPTED))
+                self.publish(Event(SELECT_JOB_INTERRUPTED))
             else:
                 self.current_job_id = in_progress_jobs[0][JOB_ID]
                 logger.debug(f"Job execution in progress: {self.current_job_id}")
@@ -85,16 +85,17 @@ class SelectJobState(BaseState):
             queued_jobs.sort(key=lambda summary: summary["queuedAt"])
             self.current_job_id = queued_jobs[0][JOB_ID]
             logger.debug(f"Start queued job execution: {self.current_job_id}")
-        # No pending job executions
         else:
+            # No pending job executions
             logger.error("No job executions available.")
-            return self.publish(Event(SELECT_JOB_INTERRUPTED))
+            self.publish(Event(SELECT_JOB_INTERRUPTED))
 
-        # Subscribe to current job description
-        self.describe_job_execution_response = describe_job_execution_response(
-            settings.broker.thing_name, self.current_job_id
-        )
-        self.mqtt_client.subscribe(self.describe_job_execution_response, qos=1)
+        # Subscribe to current job description, if any job was selected
+        if self.current_job_id:
+            self.describe_job_execution_response = describe_job_execution_response(
+                settings.broker.thing_name, self.current_job_id
+            )
+            self.mqtt_client.subscribe(self.describe_job_execution_response, qos=1)
 
     def on_subscription(self, state, event):
         topic = event.cargo[MQTT_EVENT_TOPIC]
