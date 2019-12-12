@@ -9,6 +9,7 @@ from upparat.events import JOB_SELECTED
 from upparat.events import MQTT_EVENT_PAYLOAD
 from upparat.events import MQTT_EVENT_TOPIC
 from upparat.events import MQTT_MESSAGE_RECEIVED
+from upparat.events import MQTT_SUBSCRIBED
 from upparat.events import SELECT_JOB_INTERRUPTED
 from upparat.jobs import describe_job_execution_response
 from upparat.jobs import Job
@@ -66,6 +67,14 @@ def create_mqtt_message_event(mocker):
         )
 
     return _create_mqtt_message_event
+
+
+@pytest.fixture
+def create_mqtt_subscription_event(mocker):
+    def _create_mqtt_subscription_event(topic):
+        return Event(MQTT_SUBSCRIBED, **{MQTT_EVENT_TOPIC: topic})
+
+    return _create_mqtt_subscription_event
 
 
 def test_no_pending_jobs(select_job_state, create_enter_event, mocker):
@@ -137,7 +146,7 @@ def test_more_than_one_job_in_progress(select_job_state, create_enter_event, moc
 
 def test_multiple_jobs_in_queued(select_job_state, create_enter_event, mocker):
     """ make sure oldest gets selected first """
-    state, inbox, mqtt_client, _ = select_job_state
+    state, inbox, _, __ = select_job_state
 
     oldest_job_id = "42"
 
@@ -155,7 +164,7 @@ def test_multiple_jobs_in_queued(select_job_state, create_enter_event, mocker):
 
 
 def test_on_message_rejected_job(select_job_state, create_mqtt_message_event):
-    state, inbox, mqtt_client, _ = select_job_state
+    state, inbox, _, __ = select_job_state
 
     state.current_job_id = "42"
     settings.broker.thing_name = "bobby"
@@ -175,7 +184,7 @@ def test_on_message_rejected_job(select_job_state, create_mqtt_message_event):
 
 
 def test_on_message_accepted_job(select_job_state, create_mqtt_message_event):
-    state, inbox, mqtt_client, _ = select_job_state
+    state, inbox, _, __ = select_job_state
 
     state.current_job_id = "42"
     settings.broker.thing_name = "bobby"
@@ -220,3 +229,76 @@ def test_on_message_accepted_job(select_job_state, create_mqtt_message_event):
     assert job.version == version
     assert job.force is True
     assert job.meta == meta
+
+
+def test_on_message_not_matching_topic(select_job_state, create_mqtt_message_event):
+    state, inbox, mqtt_client, __ = select_job_state
+
+    state.current_job_id = "42"
+    settings.broker.thing_name = "bobby"
+
+    event_rejected = create_mqtt_message_event(
+        describe_job_execution_response(
+            "not_bobby", "not_42", state_filter=JOB_REJECTED
+        )
+    )
+
+    event_accepted = create_mqtt_message_event(
+        describe_job_execution_response(
+            "not_bobby", "not_42", state_filter=JOB_ACCEPTED
+        )
+    )
+
+    state.on_message(None, event_rejected)
+    state.on_message(None, event_accepted)
+
+    # should do nothing
+    assert inbox.empty()
+    assert mqtt_client.publish.call_count == 0
+
+
+def test_on_subscription_topic_match(select_job_state, create_mqtt_subscription_event):
+    state, inbox, mqtt_client, __ = select_job_state
+
+    settings.broker.thing_name = "bobby"
+    state.current_job_id = "42"
+    state.describe_job_execution_response = describe_job_execution_response(
+        settings.broker.thing_name, state.current_job_id
+    )
+
+    event = create_mqtt_subscription_event(state.describe_job_execution_response)
+
+    state.on_subscription(None, event)
+
+    mqtt_client.publish.assert_called_once_with(
+        f"$aws/things/{settings.broker.thing_name}/jobs/{state.current_job_id}/get",
+        qos=1,
+    )
+
+
+def test_on_subscription_topic_no_match(
+    select_job_state, create_mqtt_subscription_event
+):
+    state, inbox, mqtt_client, __ = select_job_state
+
+    settings.broker.thing_name = "bobby"
+    state.current_job_id = "42"
+    state.describe_job_execution_response = describe_job_execution_response(
+        settings.broker.thing_name, state.current_job_id
+    )
+
+    event = create_mqtt_subscription_event(
+        describe_job_execution_response("not_bobby", "not_42")
+    )
+
+    state.on_subscription(None, event)
+
+    assert mqtt_client.publish.call_count == 0
+
+
+def test_event_handlers_handle_mqtt(select_job_state):
+    state, _, __, ___ = select_job_state
+    event_handlers = state.event_handlers()
+
+    assert MQTT_SUBSCRIBED in event_handlers
+    assert MQTT_MESSAGE_RECEIVED in event_handlers
