@@ -38,6 +38,8 @@ def urllib_urlopen_mock(mocker):
 
 @pytest.fixture
 def download_state(mocker, tmpdir):
+    settings.service.download_location = tmpdir
+
     state = DownloadState()
 
     state.job = Job(
@@ -90,7 +92,6 @@ def test_download_completed_successfully_with_retries(
     side_effect = [b"11", create_http_error(404), b"22", b"33", b""]
     urlopen_mock = urllib_urlopen_mock(side_effect=side_effect)
     mocker.patch("urllib.request.urlopen", urlopen_mock)
-    settings.service.download_location = tmpdir
 
     state, inbox, _, _ = download_state
     state.on_enter(None, None)
@@ -100,7 +101,7 @@ def test_download_completed_successfully_with_retries(
     assert event.name == DOWNLOAD_COMPLETED
 
     # check downloaded file
-    with open(tmpdir / state.job.id_, "r") as fd:
+    with open(state.job.filepath, "r") as fd:
         assert fd.read() == "112233"
 
     # check range headers
@@ -139,7 +140,6 @@ def test_download_put_job_in_progress(mocker, download_state, urllib_urlopen_moc
 
 def test_clean_up_old_downloads(mocker, download_state, urllib_urlopen_mock, tmpdir):
     mocker.patch("urllib.request.urlopen", urllib_urlopen_mock())
-    settings.service.download_location = tmpdir
     state, _, _, _ = download_state
 
     to_be_deleted = Path(tmpdir / "old.download.delete.me")
