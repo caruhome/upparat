@@ -2,12 +2,11 @@ import json
 from queue import Queue
 
 import pytest
-from pysm import Event
 
+from ..utils import create_mqtt_message_event  # noqa: F401
+from ..utils import create_mqtt_subscription_event  # noqa: F401
 from upparat.config import settings
 from upparat.events import JOB_SELECTED
-from upparat.events import MQTT_EVENT_PAYLOAD
-from upparat.events import MQTT_EVENT_TOPIC
 from upparat.events import MQTT_MESSAGE_RECEIVED
 from upparat.events import MQTT_SUBSCRIBED
 from upparat.events import SELECT_JOB_INTERRUPTED
@@ -52,29 +51,6 @@ def create_enter_event(mocker):
         return event
 
     return _create_enter_event
-
-
-@pytest.fixture
-def create_mqtt_message_event(mocker):
-    def _create_mqtt_message_event(topic, payload=None):
-
-        if not payload:
-            payload = {}
-
-        return Event(
-            MQTT_MESSAGE_RECEIVED,
-            **{MQTT_EVENT_TOPIC: topic, MQTT_EVENT_PAYLOAD: json.dumps(payload)},
-        )
-
-    return _create_mqtt_message_event
-
-
-@pytest.fixture
-def create_mqtt_subscription_event(mocker):
-    def _create_mqtt_subscription_event(topic):
-        return Event(MQTT_SUBSCRIBED, **{MQTT_EVENT_TOPIC: topic})
-
-    return _create_mqtt_subscription_event
 
 
 def test_no_pending_jobs(select_job_state, create_enter_event, mocker):
