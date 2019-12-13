@@ -92,7 +92,7 @@ class SelectJobState(BaseState):
             logger.info(f"Start queued job execution: {self.current_job_id}")
 
         else:
-            logger.warn("No job executions pending.")
+            logger.warning("No job executions pending.")
             self.publish(Event(SELECT_JOB_INTERRUPTED))
 
         # Subscribe to current job description, if any job was selected
