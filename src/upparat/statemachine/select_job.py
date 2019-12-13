@@ -30,9 +30,8 @@ from upparat.jobs import JOB_MESSAGE
 from upparat.jobs import JOB_REJECTED
 from upparat.jobs import JOB_STATUS
 from upparat.jobs import JOB_STATUS_DETAILS
-from upparat.jobs import job_update
+from upparat.jobs import job_update_multiple_as_failed
 from upparat.jobs import JobProgressStatus
-from upparat.jobs import JobStatus
 from upparat.statemachine import BaseState
 
 logger = logging.getLogger(__name__)
@@ -52,42 +51,48 @@ class SelectJobState(BaseState):
             JOB_EXECUTION_SUMMARIES
         ]
 
-        in_progress_jobs = job_execution_summaries[JOB_EXECUTION_SUMMARIES_PROGRESS]
-        queued_jobs = job_execution_summaries[JOB_EXECUTION_SUMMARIES_QUEUED]
+        in_progress_jobs_ids = [
+            job[JOB_ID]
+            for job in job_execution_summaries[JOB_EXECUTION_SUMMARIES_PROGRESS]
+        ]
 
-        # Check if there is an in-progress job. This means we are in an ongoing
-        # update process
-        if in_progress_jobs:
-            in_progress_jobs_count = len(in_progress_jobs)
-            if in_progress_jobs_count != 1:
-                job_ids = [job[JOB_ID] for job in in_progress_jobs]
-                error_description = (
-                    f"More than one job IN PROGRESS: {', '.join(job_ids)}"
-                )
-                logger.error(error_description)
+        # Sorted to make sure oldest is first [0]
+        queued_jobs_ids = [
+            job[JOB_ID]
+            for job in sorted(
+                job_execution_summaries[JOB_EXECUTION_SUMMARIES_QUEUED],
+                key=lambda summary: summary["queuedAt"],
+            )
+        ]
 
-                # Mark all in progress jobs as failed
-                for job_id in job_ids:
-                    job_update(
-                        self.mqtt_client,
-                        settings.broker.thing_name,
-                        job_id,
-                        JobStatus.FAILED.value,
-                        JobProgressStatus.ERROR_MULTIPLE_IN_PROGRESS.value,
-                        error_description,
-                    )
-                self.publish(Event(SELECT_JOB_INTERRUPTED))
+        # Check if there is an in-progress job
+        # → this means we are in an ongoing update process.
+        if in_progress_jobs_ids:
+            if len(in_progress_jobs_ids) == 1:
+                self.current_job_id = in_progress_jobs_ids[0]
+                logger.info(f"Job execution in progress: {self.current_job_id}")
             else:
-                self.current_job_id = in_progress_jobs[0][JOB_ID]
-                logger.debug(f"Job execution in progress: {self.current_job_id}")
-        elif queued_jobs:
-            # Get oldest queued job
-            queued_jobs.sort(key=lambda summary: summary["queuedAt"])
-            self.current_job_id = queued_jobs[0][JOB_ID]
-            logger.debug(f"Start queued job execution: {self.current_job_id}")
+                # If we have more than one job in progress something is very wrong.
+                # This this state should not happen → just fail all in progress job.
+                failure_reason = f"Invalid: More than one job is IN PROGRESS: {', '.join(in_progress_jobs_ids)}"  # noqa
+                logger.error(failure_reason)
+
+                job_update_multiple_as_failed(
+                    self.mqtt_client,
+                    settings.broker.thing_name,
+                    in_progress_jobs_ids,
+                    JobProgressStatus.ERROR_MULTIPLE_IN_PROGRESS.value,
+                    failure_reason,
+                )
+
+                self.publish(Event(SELECT_JOB_INTERRUPTED))
+
+        elif queued_jobs_ids:
+            self.current_job_id = queued_jobs_ids[0]
+            logger.info(f"Start queued job execution: {self.current_job_id}")
+
         else:
-            # No pending job executions
-            logger.error("No job executions available.")
+            logger.warn("No job executions pending.")
             self.publish(Event(SELECT_JOB_INTERRUPTED))
 
         # Subscribe to current job description, if any job was selected
@@ -99,6 +104,7 @@ class SelectJobState(BaseState):
 
     def on_subscription(self, state, event):
         topic = event.cargo[MQTT_EVENT_TOPIC]
+
         # Get the current job info once we are
         # subscribed to job_execution_update_topic
         if topic_matches_sub(self.describe_job_execution_response, topic):
@@ -122,6 +128,7 @@ class SelectJobState(BaseState):
         if topic_matches_sub(accepted_topic, topic):
             job_execution = payload[EXECUTION]
             job_document = job_execution[JOB_DOCUMENT]
+
             job = Job(
                 id_=job_execution[JOB_ID],
                 status=job_execution[JOB_STATUS],
@@ -131,7 +138,9 @@ class SelectJobState(BaseState):
                 meta=job_document.get(JOB_DOCUMENT_META),
                 status_details=job_execution.get(JOB_STATUS_DETAILS),
             )
+
             self.publish(Event(JOB_SELECTED, **{JOB: job}))
+
         elif topic_matches_sub(rejected_topic, topic):
             logger.warning(payload[JOB_MESSAGE])
             self.publish(Event(SELECT_JOB_INTERRUPTED))

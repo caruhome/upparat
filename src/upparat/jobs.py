@@ -126,6 +126,15 @@ def job_update(mqtt_client, thing_name, job_id, status, state, message=None):
     )
 
 
+def job_update_multiple_as_failed(
+    mqtt_client, thing_name, job_ids, state, message=None
+):
+    for job_id in job_ids:
+        job_update(
+            mqtt_client, thing_name, job_id, JobStatus.FAILED.value, state, message
+        )
+
+
 def get_in_progress_job_ids(payload):
     jobs = payload.get(JOBS, {})
     jobs_in_progress = jobs.get(JobStatus.IN_PROGRESS.value, [])

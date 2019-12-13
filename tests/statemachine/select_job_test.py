@@ -140,7 +140,7 @@ def test_more_than_one_job_in_progress(select_job_state, create_enter_event, moc
                     "status": JobStatus.FAILED.value,
                     "statusDetails": {
                         "state": JobProgressStatus.ERROR_MULTIPLE_IN_PROGRESS.value,
-                        "message": "More than one job IN PROGRESS: 1, 2",
+                        "message": "Invalid: More than one job is IN PROGRESS: 1, 2",
                     },
                 }
             ),
@@ -152,7 +152,7 @@ def test_more_than_one_job_in_progress(select_job_state, create_enter_event, moc
                     "status": JobStatus.FAILED.value,
                     "statusDetails": {
                         "state": JobProgressStatus.ERROR_MULTIPLE_IN_PROGRESS.value,
-                        "message": "More than one job IN PROGRESS: 1, 2",
+                        "message": "Invalid: More than one job is IN PROGRESS: 1, 2",
                     },
                 }
             ),
