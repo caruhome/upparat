@@ -5,6 +5,7 @@ import pytest
 from ..utils import create_mqtt_message_event  # noqa: F401
 from ..utils import create_mqtt_subscription_event  # noqa: F401
 from upparat.config import settings
+from upparat.jobs import get_pending_job_executions_response
 from upparat.statemachine import UpparatStateMachine
 from upparat.statemachine.fetch_jobs import FetchJobsState
 
@@ -36,17 +37,15 @@ def test_on_enter_subscribes(fetch_jobs_state):
 def test_on_subscription_topic_match(fetch_jobs_state, create_mqtt_subscription_event):
     state, inbox, mqtt_client, __ = fetch_jobs_state
 
-    # settings.broker.thing_name = "bobby"
-    # state.current_job_id = "42"
-    # state.describe_job_execution_response = describe_job_execution_response(
-    #     settings.broker.thing_name, state.current_job_id
-    # )
+    settings.broker.thing_name = "bobby"
+    state.get_pending_job_executions_response = get_pending_job_executions_response(
+        settings.broker.thing_name
+    )
 
-    # event = create_mqtt_subscription_event(state.describe_job_execution_response)
+    event = create_mqtt_subscription_event(state.get_pending_job_executions_response)
 
-    # state.on_subscription(None, event)
+    state.on_subscription(None, event)
 
-    # mqtt_client.publish.assert_called_once_with(
-    #     f"$aws/things/{settings.broker.thing_name}/jobs/{state.current_job_id}/get",
-    #     qos=1,
-    # )
+    mqtt_client.publish.assert_called_once_with(
+        f"$aws/things/{settings.broker.thing_name}/jobs/get", qos=1
+    )
