@@ -8,6 +8,8 @@ import pytest
 from upparat.config import settings
 from upparat.events import DOWNLOAD_COMPLETED
 from upparat.events import DOWNLOAD_INTERRUPTED
+from upparat.jobs import Job
+from upparat.jobs import JobStatus
 from upparat.statemachine import UpparatStateMachine
 from upparat.statemachine.download import DownloadState
 
@@ -35,11 +37,18 @@ def urllib_urlopen_mock(mocker):
 
 
 @pytest.fixture
-def download_state(mocker):
+def download_state(mocker, tmpdir):
     state = DownloadState()
-    state.job = mocker.Mock()
-    state.job.id_ = "4242424"
-    state.job.file_url = "https://foo.bar/baz"
+
+    state.job = Job(
+        id_="424242",
+        status=JobStatus.IN_PROGRESS,
+        file_url="https://foo.bar/baz",
+        version="1.1.1",
+        force="False",
+        meta="",
+        status_details="",
+    )
 
     inbox = Queue()
     mqtt_client = mocker.Mock()

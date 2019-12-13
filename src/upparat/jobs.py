@@ -2,6 +2,8 @@ import json
 import os
 from enum import Enum
 
+from upparat.config import settings
+
 # AWS job execution
 EXECUTION = "execution"
 EXECUTION_STATE = "executionState"
@@ -157,3 +159,7 @@ class Job:
     def internal_state(self):
         if self.status_details:
             return self.status_details[JOB_STATUS_DETAILS_STATE]
+
+    @property
+    def filepath(self):
+        return settings.service.download_location / self.id_
