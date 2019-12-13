@@ -89,7 +89,6 @@ class DownloadState(JobProcessingState):
     stop_download = threading.Event()
 
     def on_enter(self, state, event):
-        # self.job.filepath = settings.service.download_location / self.job.id_
         self.stop_download = threading.Event()
 
         for download_file in os.listdir(settings.service.download_location):
