@@ -9,6 +9,8 @@ from pathlib import Path
 
 NAME = "upparat"
 
+USE_SYS_ARGV = False
+
 SERVICE_SECTION = "service"
 LOG_LEVEL = "log_level"
 DOWNLOAD_LOCATION = "download_location"
@@ -35,8 +37,6 @@ HOOKS = (VERSION, DOWNLOAD, READY, INSTALL, RESTART)
 logger = logging.getLogger(__name__)
 
 empty = object()
-
-ENV_CONFIG_USE_SYS_ARGS = "upparat-use-sys-args"
 
 
 def _argument_parser():
@@ -177,7 +177,7 @@ class LazySettings:
 
     def _setup(self):
         args = None
-        if ENV_CONFIG_USE_SYS_ARGS in os.environ:
+        if USE_SYS_ARGV:
             args = sys.argv[1:]
         self._wrapped = Settings(args)
 

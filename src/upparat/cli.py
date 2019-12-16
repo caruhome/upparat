@@ -1,12 +1,11 @@
 import logging
-import os
 import signal
 from pathlib import Path
 from queue import Queue
 
 from pysm import Event
 
-from upparat.config import ENV_CONFIG_USE_SYS_ARGS
+from upparat import config
 from upparat.config import settings
 from upparat.events import DOWNLOAD_COMPLETED
 from upparat.events import DOWNLOAD_INTERRUPTED
@@ -164,10 +163,10 @@ def cli():
         state_machine.dispatch(event)
 
 
-def execute_from_command_line():
-    os.environ[ENV_CONFIG_USE_SYS_ARGS] = "True"
+def main():
+    config.USE_SYS_ARGV = True
     cli()
 
 
 if __name__ == "__main__":
-    execute_from_command_line()
+    main()

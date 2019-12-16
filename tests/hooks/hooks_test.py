@@ -125,7 +125,7 @@ def test_retry(mocker):
     assert event.cargo[HOOK_MESSAGE] == return_value
 
 
-def test_timeout(mocker):
+def test_retry_timeout(mocker):
     command = "long"
 
     mock = _subprocess_mock(mocker, [RETRY_EXIT_CODE, RETRY_EXIT_CODE], [])
