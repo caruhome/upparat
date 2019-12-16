@@ -27,40 +27,40 @@ REQUEST_TIMEOUT_SEC = 30
 @backoff.on_exception(
     backoff.expo, (URLError, HTTPError, socket.timeout), jitter=backoff.full_jitter
 )
-def download(state):
+def download(job, stop_download, publish, update_job_progress):
     start_position_bytes = 0
 
-    if os.path.exists(state.job.filepath):
-        start_position_bytes = os.path.getsize(state.job.filepath)
+    if os.path.exists(job.filepath):
+        start_position_bytes = os.path.getsize(job.filepath)
         logger.info(f"Partial download of {start_position_bytes} bytes found.")
 
-    if state.stop_download.is_set():
+    if stop_download.is_set():
         logger.info(f"Download interrupted [stop event set].")
 
-    request = urllib.request.Request(state.job.file_url)
+    request = urllib.request.Request(job.file_url)
     request.add_header("Range", f"bytes={start_position_bytes}-")
 
-    logger.info(f"Downloading job to {state.job.filepath}.")
+    logger.info(f"Downloading job to {job.filepath}.")
 
     try:
         with urllib.request.urlopen(
             request, timeout=REQUEST_TIMEOUT_SEC
-        ) as source, open(state.job.filepath, "ab") as destination:
+        ) as source, open(job.filepath, "ab") as destination:
 
             done = False
 
-            while not done and not state.stop_download.is_set():
+            while not done and not stop_download.is_set():
                 data = source.read(READ_CHUNK_SIZE_BYTES)
                 destination.write(data)
                 done = not data
 
-        if state.stop_download.is_set():
-            logger.info(f"Download stopped. Removing {state.job.filepath}.")
-            os.remove(state.job.filepath)
+        if stop_download.is_set():
+            logger.info(f"Download stopped. Removing {job.filepath}.")
+            os.remove(job.filepath)
 
         if done:
             logger.info(f"Download completed.")
-            state.publish(pysm.Event(DOWNLOAD_COMPLETED, **{JOB: state.job}))
+            publish(pysm.Event(DOWNLOAD_COMPLETED, **{JOB: job}))
 
     except HTTPError as http_error:
         if http_error.status == 416:
@@ -69,11 +69,11 @@ def download(state):
             # meta data through the job so if we get an error
             # due to an unsatisfiable ranger header, it's
             # likely because we already have all bytes.
-            state.publish(pysm.Event(DOWNLOAD_COMPLETED, **{JOB: state.job}))
+            publish(pysm.Event(DOWNLOAD_COMPLETED, **{JOB: job}))
         elif http_error.status == 403:
             logger.warning("URL has expired. Starting over.")
-            state.job_progress(JobProgressStatus.DOWNLOAD_INTERRUPT.value)
-            state.publish(pysm.Event(DOWNLOAD_INTERRUPTED))
+            update_job_progress(JobProgressStatus.DOWNLOAD_INTERRUPT.value)
+            publish(pysm.Event(DOWNLOAD_INTERRUPTED))
         else:
             logger.error(f"HTTPError {http_error.status}: {http_error.reason}.")
             raise http_error
@@ -100,7 +100,16 @@ class DownloadState(JobProcessingState):
         logger.debug(f"Start download for job {self.job.id_}.")
         self.job_progress(JobProgressStatus.DOWNLOAD_START.value)
 
-        threading.Thread(daemon=True, target=download, kwargs={"state": self}).start()
+        threading.Thread(
+            daemon=True,
+            target=download,
+            kwargs={
+                "job": self.job,
+                "stop_download": self.stop_download,
+                "publish": self.publish,
+                "update_job_progress": self.job_progress,
+            },
+        ).start()
 
     def on_exit(self, state, event):
         self.stop_download.set()
