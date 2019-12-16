@@ -144,8 +144,6 @@ def get_in_progress_job_ids(payload):
 
 
 class Job:
-    file_path = None
-
     def __init__(self, id_, status, file_url, version, force, meta, status_details):
         self.id_ = id_
         self.status = status

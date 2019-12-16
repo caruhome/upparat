@@ -38,7 +38,7 @@ class InstallState(JobProcessingState):
             self.stop_install_hook = run_hook(
                 settings.hooks.install,
                 self.root_machine.inbox,
-                args=[self.job.meta, str(self.job.file_path)],
+                args=[self.job.meta, self.job.filepath],
             )
         else:
             logger.info("No installation hook provided")
