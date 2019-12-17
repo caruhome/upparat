@@ -62,10 +62,7 @@ def test_on_message_no_pending_jobs(monitor_state, create_mqtt_message_event):
     mqtt_message_event = create_mqtt_message_event(topic, payload)
     state.on_message(None, mqtt_message_event)
 
-    # should not publish anything
-    # → just keep waiting in MonitorState
-    with pytest.raises(Exception):
-        inbox.get_nowait()
+    assert inbox.empty()
 
 
 def test_on_message_pending_queued_jobs(monitor_state, create_mqtt_message_event):
