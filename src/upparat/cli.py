@@ -108,7 +108,7 @@ def create_statemachine(event_queue, mqtt_client):
         download_state, fetch_jobs_state, events=[DOWNLOAD_INTERRUPTED]
     )
 
-    # Get a new signed url by starting over
+    # Download is complete successfully
     statemachine.add_transition(
         download_state, install_state, events=[DOWNLOAD_COMPLETED]
     )
@@ -118,7 +118,7 @@ def create_statemachine(event_queue, mqtt_client):
         install_state, fetch_jobs_state, events=[INSTALLATION_INTERRUPTED]
     )
 
-    # Installation is complete
+    # Installation is done
     statemachine.add_transition(
         install_state, restart_state, events=[INSTALLATION_DONE]
     )
