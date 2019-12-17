@@ -20,6 +20,7 @@ from upparat.events import SELECT_JOB_INTERRUPTED
 from upparat.statemachine.download import DownloadState
 from upparat.statemachine.fetch_jobs import FetchJobsState
 from upparat.statemachine.install import InstallState
+from upparat.statemachine.machine import create_statemachine
 from upparat.statemachine.monitor import MonitorState
 from upparat.statemachine.restart import RestartState
 from upparat.statemachine.select_job import SelectJobState
@@ -28,15 +29,15 @@ from upparat.statemachine.verify_job import VerifyJobState
 
 
 @pytest.fixture
-def statemachine_fixture(mocker):
-    mocker.patch("upparat.cli.FetchJobsState", autospec=True)
-    mocker.patch("upparat.cli.MonitorState", autospec=True)
-    mocker.patch("upparat.cli.SelectJobState", autospec=True)
-    mocker.patch("upparat.cli.VerifyJobState", autospec=True)
-    mocker.patch("upparat.cli.DownloadState", autospec=True)
-    mocker.patch("upparat.cli.InstallState", autospec=True)
-    mocker.patch("upparat.cli.RestartState", autospec=True)
-    mocker.patch("upparat.cli.VerifyInstallationState", autospec=True)
+def statemachine(mocker):
+    mocker.patch("upparat.statemachine.machine.FetchJobsState", autospec=True)
+    mocker.patch("upparat.statemachine.machine.MonitorState", autospec=True)
+    mocker.patch("upparat.statemachine.machine.SelectJobState", autospec=True)
+    mocker.patch("upparat.statemachine.machine.VerifyJobState", autospec=True)
+    mocker.patch("upparat.statemachine.machine.DownloadState", autospec=True)
+    mocker.patch("upparat.statemachine.machine.InstallState", autospec=True)
+    mocker.patch("upparat.statemachine.machine.RestartState", autospec=True)
+    mocker.patch("upparat.statemachine.machine.VerifyInstallationState", autospec=True)
 
     inbox = Queue()
     mqtt_client = mocker.Mock()
@@ -45,8 +46,8 @@ def statemachine_fixture(mocker):
 
 
 @pytest.fixture
-def fetch_jobs_state(statemachine_fixture):
-    return statemachine_fixture, statemachine_fixture.state
+def fetch_jobs_state(statemachine):
+    return statemachine, statemachine.state
 
 
 @pytest.fixture
@@ -105,9 +106,9 @@ def verify_installation_state(mocker, verify_job_state):
     return statemachine, statemachine.state
 
 
-def test_statemachine_initial_state(statemachine_fixture):
-    assert isinstance(statemachine_fixture.state, FetchJobsState)
-    assert isinstance(statemachine_fixture.initial_state, FetchJobsState)
+def test_statemachine_initial_state(statemachine):
+    assert isinstance(statemachine.state, FetchJobsState)
+    assert isinstance(statemachine.initial_state, FetchJobsState)
 
 
 def test_fetch_jobs_no_pending_jobs_found(fetch_jobs_state):

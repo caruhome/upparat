@@ -53,7 +53,6 @@ class FetchJobsState(BaseState):
         payload = json.loads(event.cargo[MQTT_EVENT_PAYLOAD])
 
         # Handle accepted pending jobs executions
-        # todo: what do we do if we never get an answer?
         if topic_matches_sub(self.get_pending_job_executions_response, topic):
             in_progress_job_executions = payload.get(IN_PROGRESS_JOBS, [])
             queued_job_executions = payload.get(QUEUED_JOBS, [])
