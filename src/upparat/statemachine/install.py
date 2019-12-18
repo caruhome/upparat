@@ -42,6 +42,8 @@ class InstallState(JobProcessingState):
             )
         else:
             logger.info("No installation hook provided")
+            # mark as succeeded because maybe there is no "install" step
+            # necessary since we only want to distribute a file
             self.job_succeeded(JobSuccessStatus.NO_INSTALLATION_HOOK_PROVIDED.value)
             self.publish(Event(INSTALLATION_INTERRUPTED))
 
@@ -53,13 +55,13 @@ class InstallState(JobProcessingState):
         self._stop_hooks()
 
     def event_handlers(self):
-        return {HOOK: self._install_hook_event}
+        return {HOOK: self.on_install_hook_event}
 
     def _stop_hooks(self):
         if self.stop_install_hook:
             self.stop_install_hook.set()
 
-    def _install_hook_event(self, _, event):
+    def on_install_hook_event(self, _, event):
         # Only handle install hook events
         if event.cargo[HOOK_COMMAND] != settings.hooks.install:
             return
