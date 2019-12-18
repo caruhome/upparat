@@ -81,6 +81,9 @@ class VerifyInstallationState(JobProcessingState):
                     self.job_succeeded(JobSuccessStatus.COMPLETE_NO_READY_CHECK.value)
                     self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))
             else:
+                logger.warning(
+                    f"Expected version '{self.job.version}', got '{version}'"
+                )
                 self.job_failed(JobFailedStatus.VERSION_MISMATCH.value, message=version)
                 self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))
         elif status in (HOOK_STATUS_FAILED, HOOK_STATUS_TIMED_OUT):
@@ -92,11 +95,12 @@ class VerifyInstallationState(JobProcessingState):
             self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))
 
     def _ready_hook_event(self, event):
-        if event.cargo[HOOK_STATUS] == HOOK_STATUS_COMPLETED:
+        status = event.cargo[HOOK_STATUS]
+        if status == HOOK_STATUS_COMPLETED:
             logger.info("Ready hook done")
             self.job_succeeded(JobSuccessStatus.COMPLETE_READY.value)
             self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))
-        else:
+        elif status in (HOOK_STATUS_FAILED, HOOK_STATUS_TIMED_OUT):
             error_message = event.cargo[HOOK_MESSAGE]
             logger.error(f"Ready hook failed: {error_message}")
             self.job_failed(
