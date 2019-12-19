@@ -3,13 +3,9 @@ from queue import Queue
 
 import pytest
 
-from ..utils import create_mqtt_message_event  # noqa: F401
-from ..utils import create_mqtt_subscription_event  # noqa: F401
+from ..utils import create_hook_event  # noqa: F401
 from upparat.config import settings
 from upparat.events import HOOK
-from upparat.events import HOOK_COMMAND
-from upparat.events import HOOK_MESSAGE
-from upparat.events import HOOK_STATUS
 from upparat.events import HOOK_STATUS_COMPLETED
 from upparat.events import HOOK_STATUS_FAILED
 from upparat.events import HOOK_STATUS_OUTPUT
@@ -49,22 +45,6 @@ def install_state(mocker):
     statemachine.add_state(state)
 
     return state, inbox, mqtt_client, statemachine, run_hook
-
-
-@pytest.fixture
-def create_hook_event(mocker):
-    def _create_hook_event(command, status, message=None):
-        event = mocker.Mock()
-
-        event.cargo = {
-            HOOK_COMMAND: command,
-            HOOK_STATUS: status,
-            HOOK_MESSAGE: message,
-        }
-
-        return event
-
-    return _create_hook_event
 
 
 def test_on_enter_missing_installation_hook(install_state):
