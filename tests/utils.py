@@ -3,6 +3,9 @@ import json
 import pytest
 from pysm import Event
 
+from upparat.events import HOOK_COMMAND
+from upparat.events import HOOK_MESSAGE
+from upparat.events import HOOK_STATUS
 from upparat.events import MQTT_EVENT_PAYLOAD
 from upparat.events import MQTT_EVENT_TOPIC
 from upparat.events import MQTT_MESSAGE_RECEIVED
@@ -30,3 +33,19 @@ def create_mqtt_subscription_event(mocker):
         return Event(MQTT_SUBSCRIBED, **{MQTT_EVENT_TOPIC: topic})
 
     return _create_mqtt_subscription_event
+
+
+@pytest.fixture
+def create_hook_event(mocker):
+    def _create_hook_event(command, status, message=None):
+        event = mocker.Mock()
+
+        event.cargo = {
+            HOOK_COMMAND: command,
+            HOOK_STATUS: status,
+            HOOK_MESSAGE: message,
+        }
+
+        return event
+
+    return _create_hook_event
