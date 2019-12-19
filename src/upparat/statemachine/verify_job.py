@@ -1,5 +1,4 @@
 import logging
-import threading
 
 from pysm import Event
 from pysm import pysm
@@ -34,7 +33,7 @@ class VerifyJobState(JobProcessingState):
     name = "verify_job"
 
     def __init__(self):
-        self.stop_version_hook = threading.Event()
+        self.stop_version_hook = None
         super().__init__()
 
     def on_enter(self, state, event):
@@ -68,13 +67,13 @@ class VerifyJobState(JobProcessingState):
         self.publish(pysm.Event(JOB_REVOKED))
 
     def event_handlers(self):
-        return {HOOK: self._version_hook_event}
+        return {HOOK: self.on_version_hook_event}
 
     def _stop_hooks(self):
         if self.stop_version_hook:
             self.stop_version_hook.set()
 
-    def _version_hook_event(self, _, event):
+    def on_version_hook_event(self, _, event):
         # Only handle version hook events
         if event.cargo[HOOK_COMMAND] != settings.hooks.version:
             return
