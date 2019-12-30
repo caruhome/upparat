@@ -1,4 +1,5 @@
 import logging
+from threading import Event
 
 from pysm import pysm
 
@@ -23,8 +24,8 @@ class VerifyInstallationState(JobProcessingState):
     name = "verify_installation"
 
     def __init__(self):
-        self.stop_version_hook = None
-        self.stop_ready_hook = None
+        self.stop_version_hook = Event()
+        self.stop_ready_hook = Event()
         super().__init__()
 
     def on_enter(self, state, event):
@@ -47,22 +48,20 @@ class VerifyInstallationState(JobProcessingState):
         self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))
 
     def event_handlers(self):
-        return {HOOK: self._handle_hooks}
+        return {HOOK: self.on_handle_hooks}
 
     def _stop_hooks(self):
-        if self.stop_version_hook:
-            self.stop_version_hook.set()
-        if self.stop_ready_hook:
-            self.stop_ready_hook.set()
+        self.stop_version_hook.set()
+        self.stop_ready_hook.set()
 
-    def _handle_hooks(self, _, event):
+    def on_handle_hooks(self, _, event):
         command = event.cargo[HOOK_COMMAND]
         if command == settings.hooks.version:
-            self._version_hook_event(event)
+            self.on_version_hook_event(event)
         elif command == settings.hooks.ready:
-            self._ready_hook_event(event)
+            self.on_ready_hook_event(event)
 
-    def _version_hook_event(self, event):
+    def on_version_hook_event(self, event):
         status = event.cargo[HOOK_STATUS]
 
         if status == HOOK_STATUS_COMPLETED:
@@ -81,10 +80,9 @@ class VerifyInstallationState(JobProcessingState):
                     self.job_succeeded(JobSuccessStatus.COMPLETE_NO_READY_CHECK.value)
                     self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))
             else:
-                logger.warning(
-                    f"Expected version '{self.job.version}', got '{version}'"
-                )
-                self.job_failed(JobFailedStatus.VERSION_MISMATCH.value, message=version)
+                message = f"Expected version '{self.job.version}', got '{version}'"
+                logger.warning(message)
+                self.job_failed(JobFailedStatus.VERSION_MISMATCH.value, message=message)
                 self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))
         elif status in (HOOK_STATUS_FAILED, HOOK_STATUS_TIMED_OUT):
             error_message = event.cargo[HOOK_MESSAGE]
@@ -94,7 +92,7 @@ class VerifyInstallationState(JobProcessingState):
             )
             self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))
 
-    def _ready_hook_event(self, event):
+    def on_ready_hook_event(self, event):
         status = event.cargo[HOOK_STATUS]
         if status == HOOK_STATUS_COMPLETED:
             logger.info("Ready hook done")

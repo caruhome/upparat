@@ -37,7 +37,9 @@ def create_job_with(
 @pytest.fixture
 def verify_job_state(mocker):
     run_hook = mocker.patch("upparat.statemachine.verify_job.run_hook")
+
     settings.broker.thing_name = "bobby"
+    settings.hooks.version = None
 
     state = VerifyJobState()
     state.job = create_job_with(JobStatus.IN_PROGRESS)
