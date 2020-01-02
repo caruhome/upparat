@@ -63,7 +63,11 @@ def _hook(hook, stop_event, inbox: Queue, args: list):
                 # todo: check if last_line contains a custom timeout and use this
                 #       as the sleep duration.
                 logger.debug(f"Retry '{hook}' in {retry_interval}s")
-                time.sleep(retry_interval)
+
+                # sleep for retry_interval, if stop_event is set break immediately
+                if stop_event.wait(retry_interval):
+                    break
+
                 retry += 1
                 if retry == max_retries:
                     _publish(
