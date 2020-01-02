@@ -1,6 +1,7 @@
 import logging
+import threading
 
-from pysm import Event
+import pysm
 
 from upparat.config import settings
 from upparat.events import HOOK
@@ -24,7 +25,7 @@ class RestartState(JobProcessingState):
     name = "restart"
 
     def __init__(self):
-        self.stop_restart_hook = None
+        self.stop_restart_hook = threading.Event()
         super().__init__()
 
     def on_enter(self, state, event):
@@ -37,23 +38,22 @@ class RestartState(JobProcessingState):
         else:
             logger.info("No restart hook provided")
             self.job_succeeded(JobSuccessStatus.NO_RESTART_HOOK_PROVIDED.value)
-            self.publish(Event(RESTART_INTERRUPTED))
+            self.publish(pysm.Event(RESTART_INTERRUPTED))
 
     def on_job_cancelled(self, state, event):
         self._stop_hooks()
-        self.publish(Event(RESTART_INTERRUPTED))
+        self.publish(pysm.Event(RESTART_INTERRUPTED))
 
     def on_exit(self, state, event):
         self._stop_hooks()
 
     def event_handlers(self):
-        return {HOOK: self._restart_hook_event}
+        return {HOOK: self.on_restart_hook_event}
 
     def _stop_hooks(self):
-        if self.stop_restart_hook:
-            self.stop_restart_hook.set()
+        self.stop_restart_hook.set()
 
-    def _restart_hook_event(self, _, event):
+    def on_restart_hook_event(self, _, event):
         # Only handle restart hook events
         if event.cargo[HOOK_COMMAND] != settings.hooks.restart:
             return
@@ -63,9 +63,9 @@ class RestartState(JobProcessingState):
         if status == HOOK_STATUS_COMPLETED:
             logger.info("Restart hook done")
             self.job_succeeded(JobSuccessStatus.COMPLETE_SOFT_RESTART.value)
-            self.publish(Event(RESTART_INTERRUPTED))
+            self.publish(pysm.Event(RESTART_INTERRUPTED))
         elif status in (HOOK_STATUS_FAILED, HOOK_STATUS_TIMED_OUT):
             message = event.cargo[HOOK_MESSAGE]
             logger.error(f"Restart failed: {message}")
             self.job_failed(JobFailedStatus.RESTART_HOOK_FAILED.value, message=message)
-            self.publish(Event(RESTART_INTERRUPTED))
+            self.publish(pysm.Event(RESTART_INTERRUPTED))
