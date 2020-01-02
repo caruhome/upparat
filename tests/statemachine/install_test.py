@@ -87,7 +87,6 @@ def test_on_job_cancelled(install_state):
     state, inbox, _, _, _ = install_state
     settings.hooks.install = "./install.sh"
 
-    state.on_enter(None, None)
     state.on_job_cancelled(None, None)
 
     published_event = inbox.get_nowait()

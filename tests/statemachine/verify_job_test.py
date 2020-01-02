@@ -151,7 +151,6 @@ def test_on_job_cancelled(verify_job_state):
     settings.hooks.version = "./version.sh"
     state.job = create_job_with(status=JobStatus.QUEUED)
 
-    state.on_enter(None, None)
     state.on_job_cancelled(None, None)
 
     published_event = inbox.get_nowait()

@@ -1,7 +1,7 @@
 import logging
+import threading
 
-from pysm import Event
-from pysm import pysm
+import pysm
 
 from upparat.config import settings
 from upparat.events import HOOK
@@ -33,7 +33,7 @@ class VerifyJobState(JobProcessingState):
     name = "verify_job"
 
     def __init__(self):
-        self.stop_version_hook = None
+        self.stop_version_hook = threading.Event()
         super().__init__()
 
     def on_enter(self, state, event):
@@ -51,7 +51,7 @@ class VerifyJobState(JobProcessingState):
             # If the restart is initiated the installation is done
             if self.job.internal_state == JobProgressStatus.REBOOT_START.value:
                 logger.info("Installation done")
-                self.publish(Event(JOB_INSTALLATION_DONE, **{JOB: self.job}))
+                self.publish(pysm.Event(JOB_INSTALLATION_DONE, **{JOB: self.job}))
             # Redo the whole update process
             else:
                 logger.info("Redo job process")
@@ -70,8 +70,7 @@ class VerifyJobState(JobProcessingState):
         return {HOOK: self.on_version_hook_event}
 
     def _stop_hooks(self):
-        if self.stop_version_hook:
-            self.stop_version_hook.set()
+        self.stop_version_hook.set()
 
     def on_version_hook_event(self, _, event):
         # Only handle version hook events
@@ -87,7 +86,7 @@ class VerifyJobState(JobProcessingState):
             if self.job.version == version:
                 logger.info(f"Version {self.job.version} is already running.")
                 self.job_succeeded(JobSuccessStatus.VERSION_ALREADY_INSTALLED.value)
-                return self.publish(Event(JOB_REVOKED))
+                return self.publish(pysm.Event(JOB_REVOKED))
             else:
                 logger.info(f"Running on version {version}. Install {self.job.version}")
                 return self._job_verified()
@@ -97,7 +96,7 @@ class VerifyJobState(JobProcessingState):
             self.job_failed(
                 JobFailedStatus.VERSION_HOOK_FAILED.value, message=error_message
             )
-            return self.publish(Event(JOB_REVOKED))
+            return self.publish(pysm.Event(JOB_REVOKED))
 
     def _job_verified(self):
-        self.publish(Event(JOB_VERIFIED, **{JOB: self.job}))
+        self.publish(pysm.Event(JOB_VERIFIED, **{JOB: self.job}))

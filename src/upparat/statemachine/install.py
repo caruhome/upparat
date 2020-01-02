@@ -1,6 +1,7 @@
 import logging
+import threading
 
-from pysm import Event
+import pysm
 
 from upparat.config import settings
 from upparat.events import HOOK
@@ -27,7 +28,7 @@ class InstallState(JobProcessingState):
     name = "install"
 
     def __init__(self):
-        self.stop_install_hook = None
+        self.stop_install_hook = threading.Event()
         super().__init__()
 
     def on_enter(self, state, event):
@@ -45,11 +46,11 @@ class InstallState(JobProcessingState):
             # mark as succeeded because maybe there is no "install" step
             # necessary since we only want to distribute a file
             self.job_succeeded(JobSuccessStatus.NO_INSTALLATION_HOOK_PROVIDED.value)
-            self.publish(Event(INSTALLATION_INTERRUPTED))
+            self.publish(pysm.Event(INSTALLATION_INTERRUPTED))
 
     def on_job_cancelled(self, state, event):
         self._stop_hooks()
-        self.publish(Event(INSTALLATION_INTERRUPTED))
+        self.publish(pysm.Event(INSTALLATION_INTERRUPTED))
 
     def on_exit(self, state, event):
         self._stop_hooks()
@@ -58,8 +59,7 @@ class InstallState(JobProcessingState):
         return {HOOK: self.on_install_hook_event}
 
     def _stop_hooks(self):
-        if self.stop_install_hook:
-            self.stop_install_hook.set()
+        self.stop_install_hook.set()
 
     def on_install_hook_event(self, _, event):
         # Only handle install hook events
@@ -70,7 +70,7 @@ class InstallState(JobProcessingState):
 
         if status == HOOK_STATUS_COMPLETED:
             logger.info("Installation hook done")
-            self.publish(Event(INSTALLATION_DONE, **{JOB: self.job}))
+            self.publish(pysm.Event(INSTALLATION_DONE, **{JOB: self.job}))
         elif status == HOOK_STATUS_OUTPUT:
             self.job_progress(
                 JobProgressStatus.INSTALLATION_PROGRESS.value,
@@ -82,4 +82,4 @@ class InstallState(JobProcessingState):
             self.job_failed(
                 JobFailedStatus.INSTALLATION_HOOK_FAILED.value, message=error_message
             )
-            self.publish(Event(INSTALLATION_INTERRUPTED))
+            self.publish(pysm.Event(INSTALLATION_INTERRUPTED))

@@ -1,5 +1,5 @@
 import logging
-from threading import Event
+import threading
 
 from pysm import pysm
 
@@ -24,8 +24,8 @@ class VerifyInstallationState(JobProcessingState):
     name = "verify_installation"
 
     def __init__(self):
-        self.stop_version_hook = Event()
-        self.stop_ready_hook = Event()
+        self.stop_version_hook = threading.Event()
+        self.stop_ready_hook = threading.Event()
         super().__init__()
 
     def on_enter(self, state, event):
