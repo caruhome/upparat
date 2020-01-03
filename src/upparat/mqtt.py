@@ -22,6 +22,32 @@ logger = logging.getLogger(__name__)
 
 
 class MQTT(Client):
+    """
+
+    The underlying problem we address here is that we want a mapping
+    between the subscription (message id, mid) and it's topic, mainly
+    in the on_unsubscribe callback.
+
+    - In the Paho on_unsubscribe callback we only receive the mid.
+
+    - But we would want the topic in the on_unsubscribe callback,
+      where we only receive the mid unfortunately, see (B).
+
+    - In order to allow this mapping, we generate our own mid BEFORE
+      we subscribe(), because Paho is threaded it's possible that
+      on_unsubscribe is called BEFORE subscribe() returns, see (A).
+
+    ---
+
+    → Therefore, we maintain our own mapping (mid → topic) here.
+
+    → The core of this logic is in subscribe() and on_unsubscribe()
+      and the rest of the code is pretty much to make this work properly.
+      I.e. overwriting Paho's MQTT client subscription handling methods
+      to support passing the generated mid.
+
+    """
+
     def __init__(self, client_id, queue):
         self._queue = queue
         self._subscriptions = {}
@@ -46,8 +72,14 @@ class MQTT(Client):
         # Remove the topic from unsubscription list
         self._unsubscriptions.discard(topic)
 
+        # (A) Generate the message_id (for the mapping)
+        # BEFORE we actually subscribe, since Paho
+        # is threaded on_unsubscribe callback can be
+        # called before _subscribe returns here, but we
+        # want to know the topic in the callback (B)
         message_id = self._mid_generate()
         self._subscription_mid[message_id] = topic
+
         result, _ = self._subscribe(topic, qos=qos, mid=message_id)
         if result != MQTT_ERR_SUCCESS:
             # Remove mid on failure
@@ -99,6 +131,10 @@ class MQTT(Client):
         )
 
     def _on_subscribe_handler(self, _, __, mid, ___):
+        # (B) see comment (A) in subscribe():
+        # we want to know the mid → topic mapping here
+        # since we want to publish an event with the topic
+        # that has been subscribed to.
         if mid in self._subscription_mid:
             self._queue.put(
                 Event(
@@ -120,6 +156,7 @@ class MQTT(Client):
             logger.error(f"No topic mapping found for unsubscription {mid}")
 
     def _send_subscribe(self, dup, topics, mid=None):
+        """ See Paho's _send_subscribe, allow for passing a mid. """
         remaining_length = 2
         for t, _ in topics:
             remaining_length += 2 + len(t) + 1
@@ -141,6 +178,7 @@ class MQTT(Client):
         return self._packet_queue(command, packet, mid, 1), mid
 
     def _subscribe(self, topic, qos=0, mid=None):
+        """ See Paho's _subscribe, allow for passing a mid. """
         topic_qos_list = None
 
         if isinstance(topic, tuple):
@@ -176,6 +214,7 @@ class MQTT(Client):
         return self._send_subscribe(False, topic_qos_list, mid)
 
     def _send_unsubscribe(self, dup, topics, mid=None):
+        """ See Paho's _send_unsubscribe, allow for passing a mid. """
         remaining_length = 2
         for t in topics:
             remaining_length += 2 + len(t)
@@ -196,9 +235,7 @@ class MQTT(Client):
         return self._packet_queue(command, packet, mid, 1), mid
 
     def _unsubscribe(self, topic, mid=None):
-        """
-        See parent
-        """
+        """ See Paho's _unsubscribe, allow for passing a mid. """
         topic_list = None
         if topic is None:
             raise ValueError("Invalid topic.")
