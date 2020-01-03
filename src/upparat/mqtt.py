@@ -87,7 +87,11 @@ class MQTT(Client):
             logger.warning(
                 f"Unable to subscribe to topic {topic}: {error_string(result)}"
             )
+
+        # We still want to keep the mapping for topic - qos
+        # in case the error gets fixed by a reconnect later!
         self._subscriptions[topic] = qos
+
         return result, message_id
 
     def unsubscribe(self, topic):
@@ -148,8 +152,8 @@ class MQTT(Client):
     def _on_unsubscribe_handler(self, _, __, mid):
         if mid in self._unsubscription_mid:
             topic = self._unsubscription_mid.pop(mid)
-            # Remove topic from unsubscribe list once we are unsubscribed. We don't
-            # need to survive a disconnect.
+            # Remove topic from unsubscribe list once we are unsubscribed.
+            # We don't need to survive a disconnect.
             self._unsubscriptions.discard(topic)
             self._queue.put(Event(MQTT_UNSUBSCRIBED, **{MQTT_EVENT_TOPIC: topic}))
         else:
