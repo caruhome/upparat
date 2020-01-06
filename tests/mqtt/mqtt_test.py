@@ -4,6 +4,11 @@ import pytest
 from paho.mqtt.client import MQTT_ERR_NO_CONN
 from paho.mqtt.client import MQTT_ERR_SUCCESS
 
+from upparat.events import MQTT_EVENT_PAYLOAD
+from upparat.events import MQTT_EVENT_TOPIC
+from upparat.events import MQTT_MESSAGE_RECEIVED
+from upparat.events import MQTT_SUBSCRIBED
+from upparat.events import MQTT_UNSUBSCRIBED
 from upparat.mqtt import MQTT
 
 MID = 42
@@ -173,3 +178,62 @@ def test_on_connect_handler_successful_unsubscribe(mocker, mqtt):
 
     assert client._unsubscribe.call_count == 0
     assert client._subscribe.call_count == 0
+
+
+def test_on_message(mocker, mqtt):
+    client, queue = mqtt
+
+    message = mocker.Mock()
+    message.topic = "topic"
+    message.payload = "o/"
+
+    client.on_message(None, None, message)
+
+    assert queue.qsize() == 1
+
+    event = queue.get_nowait()
+    assert event.name == MQTT_MESSAGE_RECEIVED
+    assert event.cargo == {
+        MQTT_EVENT_PAYLOAD: message.payload,
+        MQTT_EVENT_TOPIC: message.topic,
+    }
+
+
+def test_on_subscribe(mocker, mqtt):
+    client, queue = mqtt
+    client._subscribe = mocker.Mock(return_value=(MQTT_ERR_SUCCESS, None))
+
+    # no subscribe with MID has been called
+    client.on_subscribe(None, None, MID, None)
+    assert queue.empty()
+
+    topic = "topic"
+    client.subscribe(topic)
+    client.on_subscribe(None, None, MID, None)
+    assert queue.qsize() == 1
+
+    event = queue.get_nowait()
+    assert event.name == MQTT_SUBSCRIBED
+    assert event.cargo == {MQTT_EVENT_TOPIC: topic}
+
+
+def test_on_unsubscribe(mocker, mqtt):
+    client, queue = mqtt
+    client._unsubscribe = mocker.Mock(return_value=(MQTT_ERR_SUCCESS, None))
+
+    # no subscribe with MID has been called
+    client.on_unsubscribe(None, None, MID)
+    assert queue.empty()
+
+    topic = "topic"
+    client.unsubscribe(topic)
+    client.on_unsubscribe(None, None, MID)
+    assert queue.qsize() == 1
+
+    event = queue.get_nowait()
+    assert event.name == MQTT_UNSUBSCRIBED
+    assert event.cargo == {MQTT_EVENT_TOPIC: topic}
+
+    # check subscription state
+    assert len(client._unsubscriptions) == 0
+    assert len(client._unsubscription_mid) == 0
