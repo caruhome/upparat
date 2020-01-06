@@ -112,30 +112,64 @@ def test_unsubscribe_unsuccessful(mocker, mqtt):
     assert len(client._subscription_mid) == 0
 
 
-# wip:
-# def test_on_connect_handler(mocker, mqtt):
-#     client, queue = mqtt
-#     client._subscribe = mocker.Mock(return_value=(MQTT_ERR_SUCCESS, None))
-#     client._unsubscribe = mocker.Mock(return_value=(MQTT_ERR_SUCCESS, None))
+def test_on_connect_handler_resubscribe(mocker, mqtt):
+    client, queue = mqtt
+    client._subscribe = mocker.Mock(return_value=(MQTT_ERR_SUCCESS, None))
+    client._unsubscribe = mocker.Mock(return_value=(MQTT_ERR_SUCCESS, None))
 
-#     # setup: subscribe to a topic
-#     subscribe_qos = 0
-#     subscribe_topic = "sub_topic"
-#     client.subscribe(subscribe_topic, subscribe_qos)
+    # setup: subscribe to a topic
+    topic = "sub_topic"
+    client.subscribe(topic)
 
-#     # setup: unsubscribe from a topic
-#     unsubscribe_topic = "unsub_topic"
-#     client.unsubscribe(unsubscribe_topic)
-#     client.on_subscribe(None, None, MID, None)
+    # reset mock after setup calls
+    client._subscribe.reset_mock()
+    client._unsubscribe.reset_mock()
 
-#     # reset mock (setup calls)
-#     client._subscribe.reset_mock()
-#     client._unsubscribe.reset_mock()
+    client.on_connect(None, None, None, MQTT_ERR_SUCCESS)
 
-#     client.on_connect(None, None, None, MQTT_ERR_SUCCESS)
+    client._subscribe.assert_called_once_with(topic, qos=0, mid=MID)
+    assert client._unsubscribe.call_count == 0
 
-#     client._subscribe.assert_called_once_with(
-#         subscribe_topic, qos=subscribe_qos, mid=MID
-#     )
 
-#     client._unsubscribe.assert_called_once_with()
+def test_on_connect_handler_unsuccessful_unsubscribe(mocker, mqtt):
+    client, queue = mqtt
+    client._subscribe = mocker.Mock(return_value=(MQTT_ERR_SUCCESS, None))
+    client._unsubscribe = mocker.Mock(return_value=(MQTT_ERR_SUCCESS, None))
+
+    # setup: unsubscribe from a topic
+    topic = "unsub_topic"
+    client.unsubscribe(topic)
+    # ✗ not ok, missing on_unsubscribe
+
+    # reset mock after setup calls
+    client._subscribe.reset_mock()
+    client._unsubscribe.reset_mock()
+
+    # never got on_unsubscribe, thus re-unsubscribe
+    client.on_connect(None, None, None, MQTT_ERR_SUCCESS)
+
+    # re-unsubscribe on re-connect
+    client._unsubscribe.assert_called_once_with(topic, mid=MID)
+    assert client._subscribe.call_count == 0
+
+
+def test_on_connect_handler_successful_unsubscribe(mocker, mqtt):
+    client, queue = mqtt
+    client._subscribe = mocker.Mock(return_value=(MQTT_ERR_SUCCESS, None))
+    client._unsubscribe = mocker.Mock(return_value=(MQTT_ERR_SUCCESS, None))
+
+    # setup: unsubscribe from a topic
+    topic = "unsub_topic"
+    client.unsubscribe(topic)
+    # ✓ ok, success
+    client.on_unsubscribe(None, None, MID)
+
+    # reset mock after setup calls
+    client._subscribe.reset_mock()
+    client._unsubscribe.reset_mock()
+
+    # got on_unsubscribe, thus NOT re-unsubscribe topic
+    client.on_connect(None, None, None, MQTT_ERR_SUCCESS)
+
+    assert client._unsubscribe.call_count == 0
+    assert client._subscribe.call_count == 0
