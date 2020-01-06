@@ -106,6 +106,8 @@ class MQTT(Client):
         if result != MQTT_ERR_SUCCESS:
             del self._unsubscription_mid[message_id]
 
+        self._unsubscriptions.add(topic)
+
         return result, message_id
 
     def _on_connect_handler(self, _, __, ___, rc):
