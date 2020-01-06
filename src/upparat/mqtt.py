@@ -52,7 +52,6 @@ class MQTT(Client):
         self._queue = queue
         self._subscriptions = {}
         self._subscription_mid = {}
-        self._unsubscriptions = set()
         self._unsubscription_mid = {}
 
         super().__init__(client_id)
@@ -69,9 +68,6 @@ class MQTT(Client):
         self.loop_start()
 
     def subscribe(self, topic, qos=0):
-        # Remove the topic from unsubscription list
-        self._unsubscriptions.discard(topic)
-
         # (A) Generate the message_id (for the mapping)
         # BEFORE we actually subscribe, since Paho
         # is threaded on_unsubscribe callback can be
@@ -106,8 +102,6 @@ class MQTT(Client):
         if result != MQTT_ERR_SUCCESS:
             del self._unsubscription_mid[message_id]
 
-        self._unsubscriptions.add(topic)
-
         return result, message_id
 
     def _on_connect_handler(self, _, __, ___, rc):
@@ -120,10 +114,6 @@ class MQTT(Client):
         # (Re)subscribe to topics
         for topic, qos in self._subscriptions.items():
             self.subscribe(topic, qos=qos)
-
-        # (Re)unsubscribe to topics
-        for topic in self._unsubscriptions:
-            self.unsubscribe(topic)
 
     def _on_message_handler(self, _, __, message):
         self._queue.put(
@@ -154,9 +144,6 @@ class MQTT(Client):
     def _on_unsubscribe_handler(self, _, __, mid):
         if mid in self._unsubscription_mid:
             topic = self._unsubscription_mid.pop(mid)
-            # Remove topic from unsubscribe list once we are unsubscribed.
-            # We don't need to survive a disconnect.
-            self._unsubscriptions.discard(topic)
             self._queue.put(Event(MQTT_UNSUBSCRIBED, **{MQTT_EVENT_TOPIC: topic}))
         else:
             logger.error(f"No topic mapping found for unsubscription {mid}")
