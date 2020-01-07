@@ -91,9 +91,9 @@ class MQTT(Client):
         return result, message_id
 
     def unsubscribe(self, topic):
-        # Remove the topic from subscription list
         self._subscriptions.pop(topic, None)
 
+        # Comment (A) also applies here.
         message_id = self._mid_generate()
         self._unsubscription_mid[message_id] = topic
 
@@ -142,6 +142,7 @@ class MQTT(Client):
             logger.error(f"No topic mapping found for subscription {mid}")
 
     def _on_unsubscribe_handler(self, _, __, mid):
+        # See comment (B), same applies here.
         if mid in self._unsubscription_mid:
             topic = self._unsubscription_mid.pop(mid)
             self._queue.put(Event(MQTT_UNSUBSCRIBED, **{MQTT_EVENT_TOPIC: topic}))

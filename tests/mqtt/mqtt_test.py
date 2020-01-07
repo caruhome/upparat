@@ -30,6 +30,55 @@ def mqtt(mocker):
     return client, queue
 
 
+def test_on_subscribe_before_subscribe_returns(mocker, mqtt):
+    """
+    This is the most crucial test: Check that we still get the
+    MQTT_SUBSCRIBED event in case we receive the on_subscribe
+    callback call before _subscribe returns, see comment (A, B).
+    """
+
+    client, queue = mqtt
+
+    def _subscribe(*args, **kwargs):
+        # on_subscribe before _subscribe returns
+        client.on_subscribe(None, None, MID, None)
+        return MQTT_ERR_SUCCESS, None
+
+    client._subscribe = _subscribe
+
+    topic = "topic"
+    client.subscribe(topic)
+
+    assert queue.qsize() == 1
+    event = queue.get_nowait()
+    assert event.name == MQTT_SUBSCRIBED
+    assert event.cargo == {MQTT_EVENT_TOPIC: topic}
+
+
+def test_on_unsubscribe_before_unsubscribe_returns(mocker, mqtt):
+    """
+    Same as test_on_unsubscribe_before_unsubscribe_returns,
+    but for the unsubscribe case.
+    """
+
+    client, queue = mqtt
+
+    def _unsubscribe(*args, **kwargs):
+        # on_unsubscribe before _unsubscribe returns
+        client.on_unsubscribe(None, None, MID)
+        return MQTT_ERR_SUCCESS, None
+
+    client._unsubscribe = _unsubscribe
+
+    topic = "topic"
+    client.unsubscribe(topic)
+
+    assert queue.qsize() == 1
+    event = queue.get_nowait()
+    assert event.name == MQTT_UNSUBSCRIBED
+    assert event.cargo == {MQTT_EVENT_TOPIC: topic}
+
+
 def test_run(mocker, mqtt):
     client, queue = mqtt
 
