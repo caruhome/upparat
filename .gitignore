@@ -43,6 +43,7 @@ venv.bak/
 .vim/
 .idea/
 Session.vim
+docker-compose.override.yaml
 
 # MacOS
 .DS_Store
