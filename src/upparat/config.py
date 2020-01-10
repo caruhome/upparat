@@ -11,19 +11,21 @@ NAME = "upparat"
 
 USE_SYS_ARGV = False
 
+# settings
 SERVICE_SECTION = "service"
 LOG_LEVEL = "log_level"
 DOWNLOAD_LOCATION = "download_location"
-SENTRY = "sentry"  # todo: remove for release
+SENTRY = "sentry"
 
+# broker
 BROKER_SECTION = "broker"
 HOST = "host"
 PORT = "port"
 THING_NAME = "thing_name"
 CLIENT_ID = "client_id"
 
+# hooks
 HOOKS_SECTION = "hooks"
-
 VERSION = "version"
 DOWNLOAD = "download"
 READY = "ready"
@@ -136,7 +138,9 @@ def _hooks_section(config):
     for hook in HOOKS:
         command = config.get(HOOKS_SECTION, hook, fallback=None)
         if command and not os.access(command, os.X_OK):
-            raise PermissionError(f"Invalid command for {hook} hook: {command}")
+            raise PermissionError(
+                f"Invalid command for {hook} hook: {command}. Check that command is executable (x)."  # noqa
+            )
         setattr(hooks, hook, command)
 
     hooks.retry_interval = config.getint(HOOKS_SECTION, RETRY_INTERVAL, fallback=60)
@@ -170,8 +174,6 @@ class Settings:
 
 
 class LazySettings:
-    _wrapped = None
-
     def __init__(self):
         self._wrapped = empty
 

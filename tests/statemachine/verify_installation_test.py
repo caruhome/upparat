@@ -145,7 +145,7 @@ def test_event_handlers_handle_hook(verify_installation_state):
 # ----------------------------------------------------- #
 
 
-def test_hook_version_start_ready_hook_when_version_match(
+def test_hook_version_ready_hook_version_match(
     verify_installation_state, create_hook_event
 ):
     """
@@ -170,7 +170,7 @@ def test_hook_version_start_ready_hook_when_version_match(
     run_hook.assert_called_once_with(settings.hooks.ready, inbox, args=[state.job.meta])
 
 
-def test_hook_version_start_ready_hook_when_version_mismatch(
+def test_hook_version_ready_hook_version_mismatch(
     verify_installation_state, create_hook_event
 ):
     state, inbox, mqtt_client, _, run_hook = verify_installation_state
