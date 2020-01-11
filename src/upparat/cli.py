@@ -16,13 +16,14 @@ BASE = Path(__file__).parent
 logger = logging.getLogger(__name__)
 
 
-def cli():
-    inbox = Queue()
+def cli(inbox=None):
+
+    if not inbox:
+        inbox = Queue()
 
     if settings.service.sentry:
         import sentry_sdk
 
-        logger.debug("Init sentry")
         sentry_sdk.init(settings.service.sentry)
 
     # Graceful shutdown
