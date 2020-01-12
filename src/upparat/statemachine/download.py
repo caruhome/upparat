@@ -5,6 +5,7 @@ import threading
 import urllib.request
 from urllib.error import HTTPError
 from urllib.error import URLError
+from http.client import RemoteDisconnected
 
 import backoff
 import pysm
@@ -25,7 +26,7 @@ REQUEST_TIMEOUT_SEC = 30
 
 
 @backoff.on_exception(
-    backoff.expo, (URLError, HTTPError, socket.timeout), jitter=backoff.full_jitter
+    backoff.expo, (URLError, HTTPError, RemoteDisconnected, socket.timeout), jitter=backoff.full_jitter
 )
 def download(job, stop_download, publish, update_job_progress):
     start_position_bytes = 0
