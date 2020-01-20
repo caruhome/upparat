@@ -1,7 +1,10 @@
 import json
+import socket
+from http.client import RemoteDisconnected
 from pathlib import Path
 from queue import Queue
 from urllib.error import HTTPError
+from urllib.error import URLError
 
 import pytest
 
@@ -85,13 +88,27 @@ def test_download_interrupted_on_http_403(mocker, download_state, urllib_urlopen
     assert event.name == DOWNLOAD_INTERRUPTED
 
 
-# FIXME how to make this faster?
+@pytest.mark.parametrize(
+    "urlopen_side_effect, expected_download",
+    [
+        ([b"11", create_http_error(400), b"22", b"33", b""], "112233"),
+        ([b"11", create_http_error(404), b"22", b"33", b""], "112233"),
+        ([b"11", RemoteDisconnected(), b"22", b"33", b""], "112233"),
+        ([b"11", URLError("reason"), b"22", b"33", b""], "112233"),
+        ([b"11", socket.timeout(), b"22", b"33", b""], "112233"),
+    ],
+)
 def test_download_completed_successfully_with_retries(
-    mocker, download_state, urllib_urlopen_mock, tmpdir
+    urlopen_side_effect,
+    expected_download,
+    urllib_urlopen_mock,
+    download_state,
+    mocker,
+    tmpdir,
 ):
-    side_effect = [b"11", create_http_error(404), b"22", b"33", b""]
-    urlopen_mock = urllib_urlopen_mock(side_effect=side_effect)
+    urlopen_mock = urllib_urlopen_mock(side_effect=urlopen_side_effect)
     mocker.patch("urllib.request.urlopen", urlopen_mock)
+    mocker.patch("time.sleep")  # to make test faster
 
     state, inbox, _, _ = download_state
     state.on_enter(None, None)
@@ -102,7 +119,7 @@ def test_download_completed_successfully_with_retries(
 
     # check downloaded file
     with open(state.job.filepath, "r") as fd:
-        assert fd.read() == "112233"
+        assert fd.read() == expected_download
 
     # check range headers
     first_request = urlopen_mock.call_args_list[0][0][0]
