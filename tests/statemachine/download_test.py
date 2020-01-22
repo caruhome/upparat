@@ -142,7 +142,7 @@ def test_download_job_progress_updates(mocker, download_state, urllib_urlopen_mo
     state.on_enter(None, None)
 
     # wait for download to complete
-    event = inbox.get(timeout=10)
+    event = inbox.get(timeout=TIMEOUT)
     assert event.name == DOWNLOAD_COMPLETED
 
     expected_job_update_topic = (
