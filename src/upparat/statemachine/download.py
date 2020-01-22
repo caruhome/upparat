@@ -3,9 +3,9 @@ import os
 import socket
 import threading
 import urllib.request
+from http.client import RemoteDisconnected
 from urllib.error import HTTPError
 from urllib.error import URLError
-from http.client import RemoteDisconnected
 
 import backoff
 import pysm
@@ -21,14 +21,20 @@ logger = logging.getLogger(__name__)
 
 # TODO double check what makes sense here
 # https://stackoverflow.com/questions/28695448/
-READ_CHUNK_SIZE_BYTES = 1024 * 100
+READ_CHUNK_SIZE_BYTES = 1024 * 100  # 100 kib
 REQUEST_TIMEOUT_SEC = 30
 
 
 @backoff.on_exception(
-    backoff.expo, (URLError, HTTPError, RemoteDisconnected, socket.timeout), jitter=backoff.full_jitter
+    backoff.expo,
+    (URLError, HTTPError, RemoteDisconnected, socket.timeout),
+    jitter=backoff.full_jitter,
 )
 def download(job, stop_download, publish, update_job_progress):
+    """
+    See https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/
+    for more information regarding the backoff behaviour (i.e. jitter).
+    """
     start_position_bytes = 0
 
     if os.path.exists(job.filepath):
@@ -52,8 +58,22 @@ def download(job, stop_download, publish, update_job_progress):
 
             while not done and not stop_download.is_set():
                 data = source.read(READ_CHUNK_SIZE_BYTES)
-                destination.write(data)
-                done = not data
+
+                if data:
+                    destination.write(data)
+                    # make sure everything is written to disk now
+                    # https://docs.python.org/3/library/os.html#os.fsync
+                    destination.flush()
+                    os.fsync(destination)
+
+                    update_job_progress(
+                        JobProgressStatus.DOWNLOAD_PROGRESS.value,
+                        message={
+                            "downloaded_bytes": os.fstat(destination.fileno()).st_size
+                        },
+                    )
+                else:
+                    done = True
 
         if stop_download.is_set():
             logger.info(f"Download stopped. Removing {job.filepath}.")
