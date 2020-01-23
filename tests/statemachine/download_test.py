@@ -12,6 +12,7 @@ from upparat.config import settings
 from upparat.events import DOWNLOAD_COMPLETED
 from upparat.events import DOWNLOAD_INTERRUPTED
 from upparat.jobs import Job
+from upparat.jobs import JobProgressStatus
 from upparat.jobs import JobStatus
 from upparat.statemachine import UpparatStateMachine
 from upparat.statemachine.download import DownloadState
@@ -132,27 +133,82 @@ def test_download_completed_successfully_with_retries(
     assert second_request.full_url == state.job.file_url
 
 
-def test_download_put_job_in_progress(mocker, download_state, urllib_urlopen_mock):
-    mocker.patch("urllib.request.urlopen", urllib_urlopen_mock())
+def test_download_job_progress_updates(mocker, download_state, urllib_urlopen_mock):
+    urlopen_side_effect = [b"11", b"22", b"33", b""]
+    urlopen_mock = urllib_urlopen_mock(side_effect=urlopen_side_effect)
+    mocker.patch("urllib.request.urlopen", urlopen_mock)
+
     state, inbox, mqtt_client, _ = download_state
     state.on_enter(None, None)
 
-    expected_thing_name = settings.broker.thing_name
-    expected_job_id = state.job.id_
-
-    assert mqtt_client.publish.call_count == 1
-    assert mqtt_client.publish.call_args == mocker.call(
-        f"$aws/things/{expected_thing_name}/jobs/{expected_job_id}/update",
-        json.dumps(
-            {
-                "status": "IN_PROGRESS",
-                "statusDetails": {"state": "download_start", "message": "none"},
-            }
-        ),
-    )
-
+    # wait for download to complete
     event = inbox.get(timeout=TIMEOUT)
     assert event.name == DOWNLOAD_COMPLETED
+
+    expected_job_update_topic = (
+        f"$aws/things/{settings.broker.thing_name}/jobs/{state.job.id_}/update"
+    )
+
+    # expectation for given urlopen_side_effect = ["11", "22", "33", ""]:
+    #
+    #    ┌── job_update(DOWNLOAD_START)
+    #    │  ┌── job_update(DOWNLOAD_PROGRESS),      → 2 bytes downloaded
+    #    │  │  ┌── job_update(DOWNLOAD_PROGRESS),   → 4 bytes downloaded
+    #    │  │  │  ┌── job_update(DOWNLOAD_PROGRESS) → 6 bytes downloaded
+    #    │  │  │  │
+    #    - 11 22 33 ─ done
+    #
+    assert mqtt_client.publish.call_count == 4
+    assert mqtt_client.publish.call_args_list == [
+        mocker.call(
+            expected_job_update_topic,
+            json.dumps(
+                {
+                    "status": JobStatus.IN_PROGRESS.value,
+                    "statusDetails": {
+                        "state": JobProgressStatus.DOWNLOAD_START.value,
+                        "message": "none",
+                    },
+                }
+            ),
+        ),
+        mocker.call(
+            expected_job_update_topic,
+            json.dumps(
+                {
+                    "status": JobStatus.IN_PROGRESS.value,
+                    "statusDetails": {
+                        "state": JobProgressStatus.DOWNLOAD_PROGRESS.value,
+                        "message": {"downloaded_bytes": 2},
+                    },
+                }
+            ),
+        ),
+        mocker.call(
+            expected_job_update_topic,
+            json.dumps(
+                {
+                    "status": JobStatus.IN_PROGRESS.value,
+                    "statusDetails": {
+                        "state": JobProgressStatus.DOWNLOAD_PROGRESS.value,
+                        "message": {"downloaded_bytes": 4},
+                    },
+                }
+            ),
+        ),
+        mocker.call(
+            expected_job_update_topic,
+            json.dumps(
+                {
+                    "status": JobStatus.IN_PROGRESS.value,
+                    "statusDetails": {
+                        "state": JobProgressStatus.DOWNLOAD_PROGRESS.value,
+                        "message": {"downloaded_bytes": 6},
+                    },
+                }
+            ),
+        ),
+    ]
 
 
 def test_clean_up_old_downloads(mocker, download_state, urllib_urlopen_mock, tmpdir):
