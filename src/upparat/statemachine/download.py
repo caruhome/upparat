@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import socket
@@ -68,9 +69,9 @@ def download(job, stop_download, publish, update_job_progress):
 
                     update_job_progress(
                         JobProgressStatus.DOWNLOAD_PROGRESS.value,
-                        message={
-                            "downloaded_bytes": os.fstat(destination.fileno()).st_size
-                        },
+                        message=json.dumps(
+                            {"downloaded_bytes": os.fstat(destination.fileno()).st_size}
+                        ),
                     )
                 else:
                     done = True

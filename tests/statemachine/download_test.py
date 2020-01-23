@@ -179,7 +179,7 @@ def test_download_job_progress_updates(mocker, download_state, urllib_urlopen_mo
                     "status": JobStatus.IN_PROGRESS.value,
                     "statusDetails": {
                         "state": JobProgressStatus.DOWNLOAD_PROGRESS.value,
-                        "message": {"downloaded_bytes": 2},
+                        "message": json.dumps({"downloaded_bytes": 2}),
                     },
                 }
             ),
@@ -191,7 +191,7 @@ def test_download_job_progress_updates(mocker, download_state, urllib_urlopen_mo
                     "status": JobStatus.IN_PROGRESS.value,
                     "statusDetails": {
                         "state": JobProgressStatus.DOWNLOAD_PROGRESS.value,
-                        "message": {"downloaded_bytes": 4},
+                        "message": json.dumps({"downloaded_bytes": 4}),
                     },
                 }
             ),
@@ -203,7 +203,7 @@ def test_download_job_progress_updates(mocker, download_state, urllib_urlopen_mo
                     "status": JobStatus.IN_PROGRESS.value,
                     "statusDetails": {
                         "state": JobProgressStatus.DOWNLOAD_PROGRESS.value,
-                        "message": {"downloaded_bytes": 6},
+                        "message": json.dumps({"downloaded_bytes": 6}),
                     },
                 }
             ),
