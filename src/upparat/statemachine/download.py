@@ -67,11 +67,12 @@ def download(job, stop_download, publish, update_job_progress):
                     destination.flush()
                     os.fsync(destination)
 
+                    downloaded_bytes = os.fstat(destination.fileno()).st_size
+                    logger.debug(f"Downloaded {downloaded_bytes} bytes.")
+
                     update_job_progress(
                         JobProgressStatus.DOWNLOAD_PROGRESS.value,
-                        message=json.dumps(
-                            {"downloaded_bytes": os.fstat(destination.fileno()).st_size}
-                        ),
+                        message=json.dumps({"downloaded_bytes": downloaded_bytes}),
                     )
                 else:
                     done = True
