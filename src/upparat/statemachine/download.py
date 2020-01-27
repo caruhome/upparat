@@ -14,7 +14,16 @@ import pysm
 from upparat.config import settings
 from upparat.events import DOWNLOAD_COMPLETED
 from upparat.events import DOWNLOAD_INTERRUPTED
+from upparat.events import HOOK
+from upparat.events import HOOK_COMMAND
+from upparat.events import HOOK_MESSAGE
+from upparat.events import HOOK_STATUS
+from upparat.events import HOOK_STATUS_COMPLETED
+from upparat.events import HOOK_STATUS_FAILED
+from upparat.events import HOOK_STATUS_TIMED_OUT
 from upparat.events import JOB
+from upparat.hooks import run_hook
+from upparat.jobs import JobFailedStatus
 from upparat.jobs import JobProgressStatus
 from upparat.statemachine import JobProcessingState
 
@@ -103,22 +112,25 @@ def download(job, stop_download, publish, update_job_progress):
 
 
 class DownloadState(JobProcessingState):
-    """
-    Start file download
-    """
+    """ State that handles the actual download. """
 
     name = "download"
     job = None
-    stop_download = threading.Event()
 
-    def on_enter(self, state, event):
+    def __init__(self):
+        self.stop_download_hook = threading.Event()
         self.stop_download = threading.Event()
+        super().__init__()
 
+    def clean_previous_downloads(self):
         for download_file in os.listdir(settings.service.download_location):
             download_file_path = settings.service.download_location / download_file
             if not self.job.filepath == download_file_path:
                 logger.info(f"Deleting previous download artifact {download_file_path}")
                 os.remove(download_file_path)
+
+    def start_download_thread(self):
+        self.clean_previous_downloads()
 
         logger.debug(f"Start download for job {self.job.id_}.")
         self.job_progress(JobProgressStatus.DOWNLOAD_START.value)
@@ -134,9 +146,50 @@ class DownloadState(JobProcessingState):
             },
         ).start()
 
+    def on_enter(self, state, event):
+        hook = settings.hooks.download
+        force = self.job.force
+
+        if hook and not force:
+            self.stop_download_hook = run_hook(
+                hook, self.root_machine.inbox, args=[self.job.meta]
+            )
+        else:
+            logger.info(
+                f"Skip download hook: Hook={hook if hook else 'no-hook'}, force={force}."
+            )
+            self.start_download_thread()
+
+    def stop_hooks(self):
+        self.stop_download_hook.set()
+
     def on_exit(self, state, event):
+        self.stop_hooks()
         self.stop_download.set()
 
+    def event_handlers(self):
+        return {HOOK: self.on_handle_hooks}
+
+    def on_handle_hooks(self, _, event):
+        if event.cargo[HOOK_COMMAND] != settings.hooks.download:
+            return
+
+        status = event.cargo[HOOK_STATUS]
+
+        if status == HOOK_STATUS_COMPLETED:
+            logger.info("Hook successfully completed. Download now allowed.")
+            self.start_download_thread()
+
+        elif status in (HOOK_STATUS_FAILED, HOOK_STATUS_TIMED_OUT):
+            error_message = event.cargo[HOOK_MESSAGE]
+            logger.error(f"Version hook failed: {error_message}")
+
+            self.job_failed(
+                JobFailedStatus.DOWNLOAD_HOOK_FAILED.value, message=error_message
+            )
+            self.publish(pysm.Event(DOWNLOAD_INTERRUPTED))
+
     def on_job_cancelled(self, state, event):
+        self.stop_hooks()
         self.stop_download.set()
         self.publish(pysm.Event(DOWNLOAD_INTERRUPTED))

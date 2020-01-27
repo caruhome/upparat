@@ -55,6 +55,7 @@ class JobSuccessStatus(Enum):
 
 class JobFailedStatus(Enum):
     INSTALLATION_HOOK_FAILED = "installation_hook_failed"
+    DOWNLOAD_HOOK_FAILED = "download_hook_failed"
     RESTART_HOOK_FAILED = "restart_hook_failed"
     VERSION_HOOK_FAILED = "version_hook_failed"
     READY_HOOK_FAILED = "ready_hook_failed"
