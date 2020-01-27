@@ -9,6 +9,6 @@
 echo "Checking..."
 sleep 1
 echo "Condition: Wait for whatever..."
-sleep 120
+sleep 5
 echo "Condition: Whatever conditions met!"
 echo "Done!"
