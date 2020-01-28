@@ -175,7 +175,7 @@ class JobProcessingState(BaseState):
             payload = json.loads(event.cargo[MQTT_EVENT_PAYLOAD])
 
             if self.job.id_ not in get_in_progress_job_ids(payload):
-                logger.info(f"Job got {self.job.id_} canceled.")
+                logger.info(f"Job {self.job.id_} got canceled.")
                 return self.on_job_cancelled(state, event)
 
         if mqtt_message_handler:
