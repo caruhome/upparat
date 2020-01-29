@@ -171,10 +171,10 @@ def test_fail(mocker):
 
 def test_command(mocker):
     queue = mocker.MagicMock()
-    run_hook(COMMAND_FILE, queue, join=True)
+    run_hook(COMMAND_FILE, queue, join=True, args=["args"])
     args, _ = queue.put.call_args
 
     event = args[0]
     assert event.name == HOOK
     assert event.cargo[HOOK_STATUS] == HOOK_STATUS_COMPLETED
-    assert event.cargo[HOOK_MESSAGE] == "timeout:12"
+    assert event.cargo[HOOK_MESSAGE] == "args"
