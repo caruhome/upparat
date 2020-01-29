@@ -20,9 +20,11 @@ from upparat.statemachine import UpparatStateMachine
 from upparat.statemachine.verify_job import VerifyJobState
 
 
-def create_job_with(
-    status=JobStatus.QUEUED, force=False, version="1.0.1", status_details=None
-):
+def create_job_with(force=False, status=None, version=None, status_details=None):
+    if not status:
+        status = JobStatus.QUEUED
+    if not version:
+        version = "1.0.1"
     return Job(
         "42",
         status.value,
