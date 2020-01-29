@@ -134,7 +134,7 @@ class SelectJobState(BaseState):
                 status=job_execution[JOB_STATUS],
                 file_url=job_document[JOB_DOCUMENT_FILE],
                 version=job_document[JOB_DOCUMENT_VERSION],
-                force=job_document.get(JOB_DOCUMENT_FORCE, "False"),
+                force=job_document.get(JOB_DOCUMENT_FORCE, False),
                 meta=job_document.get(JOB_DOCUMENT_META),
                 status_details=job_execution.get(JOB_STATUS_DETAILS),
             )

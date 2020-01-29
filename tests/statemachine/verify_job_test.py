@@ -30,7 +30,7 @@ def create_job_with(force=False, status=None, version=None, status_details=None)
         status.value,
         "http://foo.bar/baz.bin",
         version,
-        "True" if force else "False",
+        force,
         "meta",
         status_details.value if status_details else None,
     )

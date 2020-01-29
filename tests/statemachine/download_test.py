@@ -59,7 +59,7 @@ def download_state(mocker, tmpdir):
         status=JobStatus.IN_PROGRESS,
         file_url="https://foo.bar/baz",
         version="1.1.1",
-        force="False",
+        force=False,
         meta="",
         status_details="",
     )
