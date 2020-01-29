@@ -83,7 +83,7 @@ class VerifyJobState(JobProcessingState):
             logger.debug("Version hook done")
             version = event.cargo[HOOK_MESSAGE]
             # Check if we do not already run on the version to be installed
-            if self.job.version == version:
+            if self.job.version == version and not self.job.force:
                 logger.info(f"Version {self.job.version} is already running.")
                 self.job_succeeded(JobSuccessStatus.VERSION_ALREADY_INSTALLED.value)
                 return self.publish(pysm.Event(JOB_REVOKED))

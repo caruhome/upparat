@@ -184,6 +184,20 @@ def test_hook_completed_version_match(verify_job_state, create_hook_event):
     )
 
 
+def test_hook_completed_version_match_with_force(verify_job_state, create_hook_event):
+    state, inbox, mqtt_client, _, _ = verify_job_state
+    settings.hooks.version = "./version.sh"
+
+    version = "1.0.1"
+    state.job = create_job_with(version=version, force=True)
+    event = create_hook_event(settings.hooks.version, HOOK_STATUS_COMPLETED, version)
+    state.on_version_hook_event(None, event)
+
+    assert inbox.qsize() == 1
+    published_event = inbox.get_nowait()
+    assert published_event.name == JOB_VERIFIED
+
+
 def test_hook_completed_version_mismatch(verify_job_state, create_hook_event):
     state, inbox, mqtt_client, _, _ = verify_job_state
     settings.hooks.version = "./version.sh"
