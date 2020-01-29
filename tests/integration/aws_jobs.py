@@ -26,6 +26,7 @@ def create_job(targets, s3_url, role_arn):
             {
                 "action": "update",
                 "version": VERSION_OLD,
+                "force": False,
                 "file": f"${{aws:iot:s3-presigned-url:{s3_url}}}",
             }
         ),
