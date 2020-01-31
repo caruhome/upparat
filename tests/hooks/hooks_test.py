@@ -1,8 +1,6 @@
 import subprocess
 from pathlib import Path
 
-import freezegun
-
 from upparat.config import settings
 from upparat.events import HOOK
 from upparat.events import HOOK_MESSAGE
@@ -15,12 +13,6 @@ from upparat.hooks import RETRY_EXIT_CODE
 from upparat.hooks import run_hook
 
 COMMAND_FILE = (Path(__file__).parent / "test.sh").as_posix()
-
-
-def _freeze_time_threading(*args, **kwargs):
-    f = freezegun.freeze_time(*args, **kwargs)
-    f.ignore = tuple(set(f.ignore) - {"threading"})
-    return f
 
 
 def _subprocess_mock(mocker, exit_codes, stdout: list):
@@ -55,15 +47,17 @@ def test_stop_event(mocker):
 
 def test_subprocess_args(mocker):
     mock = _subprocess_mock(mocker, [0], [])
+    default_timer = mocker.Mock(side_effect=[0, 10])
+    mocker.patch("upparat.hooks.default_timer", default_timer)
 
+    elapsed = 10  # 10 - 0
     command = "noop"
-    start_time = 1520294400  # "2018-03-06"
     retry_count = 0
 
-    with _freeze_time_threading("2018-03-06"):
-        run_hook(command, mocker.MagicMock(), args=None, join=True)
+    run_hook(command, mocker.MagicMock(), args=None, join=True)
+
     mock.assert_called_once_with(
-        [command, str(start_time), str(retry_count)],
+        [command, str(elapsed), str(retry_count)],
         bufsize=1,
         stdout=subprocess.PIPE,
         universal_newlines=True,

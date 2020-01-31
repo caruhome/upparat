@@ -1,8 +1,8 @@
 import logging
 import subprocess
 import threading
-import time
 from queue import Queue
+from timeit import default_timer
 
 import pysm
 
@@ -34,12 +34,14 @@ def _hook(hook, stop_event, inbox: Queue, args: list):
     max_retries = settings.hooks.max_retries
     retry_interval = settings.hooks.retry_interval
 
-    first_call = int(time.time())
+    first_call_timer = default_timer()
 
     while retry < max_retries and not stop_event.is_set():
+        time_elapsed = int(default_timer() - first_call_timer)
+
         # universal_newlines=True and bufsize 1 means line buffered
         with subprocess.Popen(
-            [hook, str(first_call), str(retry)] + args,
+            [hook, str(time_elapsed), str(retry)] + args,
             stdout=subprocess.PIPE,
             universal_newlines=True,
             bufsize=1,

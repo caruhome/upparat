@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Check if download is allowed right now.
 #
-# $1: timestamp from first call
+# $1: time elapsed since the first call
 # $2: retry count
 # $3: meta from job document
 # $4: file location
