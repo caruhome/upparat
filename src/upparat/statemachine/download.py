@@ -1,3 +1,4 @@
+import functools
 import json
 import logging
 import os
@@ -33,10 +34,11 @@ logger = logging.getLogger(__name__)
 # https://stackoverflow.com/questions/28695448/
 READ_CHUNK_SIZE_BYTES = 1024 * 100  # 100 kib
 REQUEST_TIMEOUT_SEC = 30
+BACKOFF_EXPO_MAX_SEC = 2 ** 6  # 64
 
 
 @backoff.on_exception(
-    backoff.expo,
+    functools.partial(backoff.expo, max_value=BACKOFF_EXPO_MAX_SEC),
     (URLError, HTTPError, RemoteDisconnected, socket.timeout),
     jitter=backoff.full_jitter,
 )
