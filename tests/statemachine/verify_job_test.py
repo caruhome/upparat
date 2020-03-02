@@ -25,14 +25,15 @@ def create_job_with(force=False, status=None, version=None, status_details=None)
         status = JobStatus.QUEUED
     if not version:
         version = "1.0.1"
+
     return Job(
-        "42",
-        status.value,
-        "http://foo.bar/baz.bin",
-        version,
-        force,
-        "meta",
-        status_details.value if status_details else None,
+        id_="42",
+        status=status.value,
+        file_url="http://foo.bar/baz.bin",
+        version=version,
+        force=force,
+        meta="meta",
+        status_details=status_details.value if status_details else None,
     )
 
 
@@ -44,7 +45,7 @@ def verify_job_state(mocker):
     settings.hooks.version = None
 
     state = VerifyJobState()
-    state.job = create_job_with(JobStatus.IN_PROGRESS)
+    state.job = create_job_with(status=JobStatus.IN_PROGRESS)
 
     inbox = Queue()
     mqtt_client = mocker.Mock()
@@ -193,11 +194,11 @@ def test_hook_completed_version_match_with_force(verify_job_state, create_hook_e
     version = "1.0.1"
     state.job = create_job_with(version=version, force=True)
     event = create_hook_event(settings.hooks.version, HOOK_STATUS_COMPLETED, version)
-    state.on_version_hook_event(None, event)
 
-    assert inbox.qsize() == 1
-    published_event = inbox.get_nowait()
-    assert published_event.name == JOB_VERIFIED
+    # provoke invalid state, i.e. force and somehow
+    # we get a hook event for the version hook → ✗
+    with pytest.raises(AssertionError):
+        state.on_version_hook_event(None, event)
 
 
 def test_hook_completed_version_mismatch(verify_job_state, create_hook_event):
