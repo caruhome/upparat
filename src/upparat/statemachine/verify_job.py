@@ -77,6 +77,9 @@ class VerifyJobState(JobProcessingState):
         if event.cargo[HOOK_COMMAND] != settings.hooks.version:
             return
 
+        # hook should never run on force, force == skip it
+        assert not self.job.force
+
         status = event.cargo[HOOK_STATUS]
 
         if status == HOOK_STATUS_COMPLETED:

@@ -151,7 +151,7 @@ class Job:
         self.status_details = status_details
         self.file_url = file_url
         self.version = version
-        self.force = force.lower() in ("yes", "true", "on", "1")
+        self.force = force
         self.meta = meta
 
     @property

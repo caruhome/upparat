@@ -24,7 +24,7 @@ JOB_ = Job(
     JobStatus.IN_PROGRESS,
     "http://foo.bar/baz.bin",
     "1.0.0",
-    "False",
+    False,
     "meta",
     "details",
 )

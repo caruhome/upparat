@@ -20,17 +20,20 @@ from upparat.statemachine import UpparatStateMachine
 from upparat.statemachine.verify_job import VerifyJobState
 
 
-def create_job_with(
-    status=JobStatus.QUEUED, force=False, version="1.0.1", status_details=None
-):
+def create_job_with(force=False, status=None, version=None, status_details=None):
+    if not status:
+        status = JobStatus.QUEUED
+    if not version:
+        version = "1.0.1"
+
     return Job(
-        "42",
-        status.value,
-        "http://foo.bar/baz.bin",
-        version,
-        "True" if force else "False",
-        "meta",
-        status_details.value if status_details else None,
+        id_="42",
+        status=status.value,
+        file_url="http://foo.bar/baz.bin",
+        version=version,
+        force=force,
+        meta="meta",
+        status_details=status_details.value if status_details else None,
     )
 
 
@@ -42,7 +45,7 @@ def verify_job_state(mocker):
     settings.hooks.version = None
 
     state = VerifyJobState()
-    state.job = create_job_with(JobStatus.IN_PROGRESS)
+    state.job = create_job_with(status=JobStatus.IN_PROGRESS)
 
     inbox = Queue()
     mqtt_client = mocker.Mock()
@@ -182,6 +185,20 @@ def test_hook_completed_version_match(verify_job_state, create_hook_event):
         f"$aws/things/{settings.broker.thing_name}/jobs/{state.job.id_}/update",
         '{"status": "SUCCEEDED", "statusDetails": {"state": "version_already_installed", "message": "none"}}',  # noqa
     )
+
+
+def test_hook_completed_version_match_with_force(verify_job_state, create_hook_event):
+    state, inbox, mqtt_client, _, _ = verify_job_state
+    settings.hooks.version = "./version.sh"
+
+    version = "1.0.1"
+    state.job = create_job_with(version=version, force=True)
+    event = create_hook_event(settings.hooks.version, HOOK_STATUS_COMPLETED, version)
+
+    # provoke invalid state, i.e. force and somehow
+    # we get a hook event for the version hook → ✗
+    with pytest.raises(AssertionError):
+        state.on_version_hook_event(None, event)
 
 
 def test_hook_completed_version_mismatch(verify_job_state, create_hook_event):

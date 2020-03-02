@@ -183,7 +183,7 @@ def test_on_message_accepted_job(select_job_state, create_mqtt_message_event):
     status = JobStatus.IN_PROGRESS.value
     file_url = "https://foo.bar/baz.bin"
     version = "1.1.0"
-    force = "yes"
+    force = True
     meta = "_meta_"
     status_details = "_details_"
 
