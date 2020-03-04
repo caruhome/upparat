@@ -73,6 +73,20 @@ def download_state(mocker, tmpdir):
     return state, inbox, mqtt_client, statemachine, run_hook
 
 
+def test_on_enter_clear_stop_event(mocker, download_state, urllib_urlopen_mock):
+    mocker.patch("urllib.request.urlopen", urllib_urlopen_mock())
+    state, inbox, _, _, _ = download_state
+
+    # previous job got cancelled
+    state.on_job_cancelled(None, None)
+
+    # next job should clear event
+    # before starting the download
+    state.on_enter(None, None)
+
+    assert not state.stop_download.is_set()
+
+
 def test_download_completed_on_http_416(mocker, download_state, urllib_urlopen_mock):
     side_effect = create_http_error(416)
     urlopen_mock = urllib_urlopen_mock(side_effect)

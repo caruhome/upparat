@@ -132,6 +132,9 @@ class DownloadState(JobProcessingState):
                 os.remove(download_file_path)
 
     def start_download_thread(self):
+        # event could still be set from the previous job
+        # that has been cancelled or deleted, so clear it.
+        self.stop_download.clear()
         self.clean_previous_downloads()
 
         logger.debug(f"Start download for job {self.job.id_}.")
