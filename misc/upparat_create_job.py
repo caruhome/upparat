@@ -135,7 +135,7 @@ def build_targets(arn_iot, thing_argument, group_argument):
         sys.exit()
 
     target_arns = []
-    target_arns += [f"{arn_iot}:thing/{things}" for thing in things]
+    target_arns += [f"{arn_iot}:thing/{thing}" for thing in things]
     target_arns += [f"{arn_iot}:thinggroup/{group}" for group in groups]
 
     return target_arns, list(things), list(groups)
