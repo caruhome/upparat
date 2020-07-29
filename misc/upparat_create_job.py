@@ -169,6 +169,9 @@ def main(arguments):
     print(f" → ARN IoT: {arguments.arn_iot}")
     print(f" → Things: {thing_names}")
     print(f" → Groups: {group_names}\n")
+    print(f"AWS IoT Job Document:\n")
+    print(json.dumps(json.loads(document), indent=2))
+    print("")
 
     if not arguments.dry_run:
         create_job(
