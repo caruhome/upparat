@@ -9,6 +9,7 @@ from upparat.config import settings
 from upparat.events import JOB_SELECTED
 from upparat.events import MQTT_MESSAGE_RECEIVED
 from upparat.events import MQTT_SUBSCRIBED
+from upparat.events import SELECT_JOB_ACTION_MISMATCH
 from upparat.events import SELECT_JOB_INTERRUPTED
 from upparat.jobs import describe_job_execution_response
 from upparat.jobs import Job
@@ -175,6 +176,33 @@ def test_on_message_rejected_job(select_job_state, create_mqtt_message_event):
     assert inbox.empty()
 
 
+def test_on_message_not_from_upparat_job(select_job_state, create_mqtt_message_event):
+    state, inbox, _, __ = select_job_state
+
+    state.current_job_id = "42"
+    settings.broker.thing_name = "bobby"
+
+    event = create_mqtt_message_event(
+        describe_job_execution_response(
+            settings.broker.thing_name, state.current_job_id, state_filter=JOB_ACCEPTED
+        ),
+        {
+            "execution": {
+                "jobId": "42",
+                "status": JobStatus.IN_PROGRESS.value,
+                "statusDetails": "...",
+                "jobDocument": {"jobFromAnotherService": "notFromUpparat"},
+            }
+        },
+    )
+
+    state.on_message(None, event)
+
+    published_event = inbox.get_nowait()
+    assert published_event.name == SELECT_JOB_ACTION_MISMATCH
+    assert inbox.empty()
+
+
 def test_on_message_accepted_job(select_job_state, create_mqtt_message_event):
     state, inbox, _, __ = select_job_state
 
@@ -197,6 +225,7 @@ def test_on_message_accepted_job(select_job_state, create_mqtt_message_event):
                 "status": status,
                 "statusDetails": status_details,
                 "jobDocument": {
+                    "action": "upparat-update",
                     "version": version,
                     "file": file_url,
                     "force": force,

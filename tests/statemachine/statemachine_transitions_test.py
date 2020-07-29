@@ -16,6 +16,7 @@ from upparat.events import JOB_VERIFIED
 from upparat.events import JOBS_AVAILABLE
 from upparat.events import NO_JOBS_PENDING
 from upparat.events import RESTART_INTERRUPTED
+from upparat.events import SELECT_JOB_ACTION_MISMATCH
 from upparat.events import SELECT_JOB_INTERRUPTED
 from upparat.statemachine.download import DownloadState
 from upparat.statemachine.fetch_jobs import FetchJobsState
@@ -122,6 +123,13 @@ def test_fetch_jobs_pending_jobs_found(fetch_jobs_state):
     statemachine, _ = fetch_jobs_state
     statemachine.dispatch(Event(JOBS_AVAILABLE))
     assert isinstance(statemachine.state, SelectJobState)
+    return statemachine, statemachine.state
+
+
+def test_select_found_job_not_for_upparat(select_job_state):
+    statemachine, _ = select_job_state
+    statemachine.dispatch(Event(SELECT_JOB_ACTION_MISMATCH))
+    assert isinstance(statemachine.state, MonitorState)
     return statemachine, statemachine.state
 
 

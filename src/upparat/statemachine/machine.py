@@ -13,6 +13,7 @@ from upparat.events import JOB_VERIFIED
 from upparat.events import JOBS_AVAILABLE
 from upparat.events import NO_JOBS_PENDING
 from upparat.events import RESTART_INTERRUPTED
+from upparat.events import SELECT_JOB_ACTION_MISMATCH
 from upparat.events import SELECT_JOB_INTERRUPTED
 from upparat.statemachine import UpparatStateMachine
 from upparat.statemachine.download import DownloadState
@@ -69,6 +70,10 @@ def create_statemachine(event_queue, mqtt_client):
     # Pending jobs got modified (rejected) meanwhile
     statemachine.add_transition(
         select_job_state, fetch_jobs_state, events=[SELECT_JOB_INTERRUPTED]
+    )
+
+    statemachine.add_transition(
+        select_job_state, monitor_state, events=[SELECT_JOB_ACTION_MISMATCH]
     )
 
     # Job is ready for process

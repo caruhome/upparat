@@ -4,6 +4,8 @@ from enum import Enum
 
 from upparat.config import settings
 
+UPPARAT_ACTION = "upparat-update"
+
 # AWS job execution
 EXECUTION = "execution"
 EXECUTION_STATE = "executionState"
@@ -14,6 +16,7 @@ JOBS = "jobs"
 # AWS job document
 JOB_ID = "jobId"
 JOB_DOCUMENT = "jobDocument"
+JOB_DOCUMENT_ACTION = "action"
 JOB_DOCUMENT_FILE = "file"
 JOB_DOCUMENT_VERSION = "version"
 JOB_DOCUMENT_META = "meta"
