@@ -151,7 +151,7 @@ fi
 
 ### Statemachine
 
-See for a statemachien diagram [docs/](./docs/).
+![statemachine](./docs/statemachine.png)
 
 ### Tests
 
