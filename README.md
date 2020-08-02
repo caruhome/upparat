@@ -87,7 +87,7 @@ Create a job in the AWS Iot Console.
 
 ```json
 {
-  "action": "upparat-update"
+  "action": "upparat-update",
   "version": "<test file version>",
   "file": "${aws:iot:s3-presigned-url:https://s3.<test file location>}",
   "meta": "<will be passed as an argument to your commands>",
@@ -149,11 +149,13 @@ fi
   pre-commit install --install-hooks
   ```
 
-### Statemachine
-
-![statemachine](./docs/statemachine.png)
-
 ### Tests
 
-`docker-compose run test`
-`docker-compose run format`
+```bash
+docker-compose run test
+docker-compose run format
+```
+
+### Internal Statemachine
+
+![statemachine](./docs/statemachine.png)
