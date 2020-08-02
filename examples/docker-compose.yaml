@@ -14,7 +14,10 @@ services:
     image: upparat:local
     command: --verbose --config /config/config.ini
     volumes:
-      - ./upparat/config.ini:/config/config.ini
+      - ./upparat/config/config.alpn.ini:/config/config.ini
+      - ./upparat/config/certs/cafile:/config/cafile
+      - ./upparat/config/certs/certfile:/config/certfile
+      - ./upparat/config/certs/keyfile:/config/keyfile
       - ./upparat/hooks/:/hooks/
       - ./upparat/tmp:/tmp
       # make sure to not mount over .egginfo in /app/upparat

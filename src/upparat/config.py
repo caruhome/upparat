@@ -23,6 +23,9 @@ HOST = "host"
 PORT = "port"
 THING_NAME = "thing_name"
 CLIENT_ID = "client_id"
+CAFILE = "cafile"
+CERTFILE = "certfile"
+KEYFILE = "keyfile"
 
 # hooks
 HOOKS_SECTION = "hooks"
@@ -67,6 +70,9 @@ class Broker:
     port: int
     thing_name: str
     client_id: str
+    cafile: str
+    certfile: str
+    keyfile: str
 
 
 class Hooks:
@@ -120,15 +126,32 @@ def _service_section(config, verbose):
 
 def _broker_section(config, thing_name=None):
     broker = Broker()
-    broker.host = config.get(BROKER_SECTION, HOST, fallback="127.0.0.1")
-    broker.port = config.getint(BROKER_SECTION, PORT, fallback=1883)
+
     if thing_name:
         broker.thing_name = thing_name
     else:
         broker.thing_name = config.get(
             BROKER_SECTION, THING_NAME, fallback=socket.gethostname()
         )
+
+    broker.host = config.get(BROKER_SECTION, HOST)
+    broker.port = config.getint(BROKER_SECTION, PORT)
     broker.client_id = config.get(BROKER_SECTION, CLIENT_ID, fallback=NAME)
+
+    broker.cafile = config.get(BROKER_SECTION, CAFILE, fallback=None)
+    broker.certfile = config.get(BROKER_SECTION, CERTFILE, fallback=None)
+    broker.keyfile = config.get(BROKER_SECTION, KEYFILE, fallback=None)
+
+    set_files_count = sum(
+        filepath is None
+        for filepath in [broker.cafile, broker.certfile, broker.keyfile]
+    )
+
+    # optional, but if one is giving all are expected
+    if set_files_count not in [0, 3]:
+        raise Exception(
+            "Invalid config: Either set all (cafile|certfile|keyfile) or none."
+        )
 
     return broker
 

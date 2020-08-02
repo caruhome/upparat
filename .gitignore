@@ -51,11 +51,12 @@ docker-compose.override.yaml
 # Integration Tests
 
 # Mosquitto
-tests/integration/mosquitto/*.pem
-tests/integration/mosquitto/*.key
-tests/integration/mosquitto/*.crt
-tests/integration/mosquitto/aws-bridge.conf
+examples/mosquitto/*.pem
+examples/mosquitto/*.key
+examples/mosquitto/*.crt
+examples/mosquitto/aws-bridge.conf
 
 # Upparat
-tests/integration/upparat/config.ini
-tests/integration/upparat/tmp
+examples/upparat/config.ini
+examples/upparat/tmp
+examples/upparat/config/certs

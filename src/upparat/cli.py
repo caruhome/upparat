@@ -1,5 +1,6 @@
 import logging
 import signal
+import ssl
 from pathlib import Path
 from queue import Queue
 
@@ -34,8 +35,32 @@ def cli(inbox=None):
     signal.signal(signal.SIGTERM, _exit)
 
     client = MQTT(client_id=settings.broker.client_id, queue=inbox)
-    client.run(settings.broker.host, settings.broker.port)
 
+    cafile = settings.broker.cafile
+    certfile = settings.broker.certfile
+    keyfile = settings.broker.keyfile
+
+    host = settings.broker.host
+    port = settings.broker.port
+
+    # for client certificate authentication use the TLS
+    # APLN extension which requires 443 or 8883.
+    if cafile or certfile or keyfile:
+        try:
+            if port not in [443, 8883]:
+                raise Exception(
+                    "Port must be 443/8883 for TLS APLN client certificate authentication."  # noqa
+                )
+            ssl_context = ssl.create_default_context()
+            ssl_context.set_alpn_protocols(["x-amzn-mqtt-ca"])
+            ssl_context.load_verify_locations(cafile=cafile)
+            ssl_context.load_cert_chain(certfile=certfile, keyfile=keyfile)
+            client.tls_set_context(context=ssl_context)
+        except Exception as e:
+            logger.exception("Error in TLS ALPN extension setup.")
+            raise e
+
+    client.run(host, port)
     state_machine = create_statemachine(inbox, client)
 
     while True:
