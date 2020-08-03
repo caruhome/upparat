@@ -18,12 +18,61 @@ to use any software update tool such as [RAUC](https://github.com/rauc/rauc),
 
 ### AWS Setup
 
-- Create an AWS Iot Thing in the console and download the certificates
-- Create policy
-- Create S3 bucket and upload a test file
-- Create IAM role
+1. Create an AWS Iot Thing and download the certificates. We will reference the downloaded files as:
 
-TBD
+```bash
+.cert.pem → certfile
+.private.key → keyfile
+
+# https://www.amazontrust.com/repository/AmazonRootCA1.pem
+AmazonRootCA1.pem.txt → cafile
+```
+
+1. Create and attach the following policy to the Thing's certificate:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": ["iot:Connect"],
+      "Resource": ["*"],
+      "Effect": "Allow"
+    },
+    {
+      "Action": "iot:Publish",
+      "Resource": ["*"],
+      "Effect": "Allow"
+    },
+    {
+      "Action": "iot:Subscribe",
+      "Resource": ["*"],
+      "Effect": "Allow"
+    },
+    {
+      "Action": "iot:Receive",
+      "Resource": ["*"],
+      "Effect": "Allow"
+    }
+  ]
+}
+```
+
+1. Create an S3 bucket and upload a test file (i.e. your firmware file).
+1. Create a role for the principle `IoT` and with the following policy attached:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::your-upparat-jobs-bucket/*"
+    }
+  ]
+}
+```
 
 ### Configuration
 
