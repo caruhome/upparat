@@ -28,7 +28,7 @@ to use any software update tool such as [RAUC](https://github.com/rauc/rauc),
 AmazonRootCA1.pem.txt → cafile
 ```
 
-1. Create and attach the following policy to the Thing's certificate:
+2. Create and attach the following policy to the Thing's certificate:
 
 ```json
 {
@@ -58,8 +58,8 @@ AmazonRootCA1.pem.txt → cafile
 }
 ```
 
-1. Create an S3 bucket and upload a test file (i.e. your firmware file).
-1. Create a role for the principle `IoT` and with the following policy attached:
+3. Create an S3 bucket and upload a test file (i.e. your firmware file).
+4. Create a role for the principle `IoT` and with the following policy attached:
 
 ```json
 {
