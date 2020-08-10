@@ -35,22 +35,7 @@ AmazonRootCA1.pem.txt → cafile
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Action": ["iot:Connect"],
-      "Resource": ["*"],
-      "Effect": "Allow"
-    },
-    {
-      "Action": "iot:Publish",
-      "Resource": ["*"],
-      "Effect": "Allow"
-    },
-    {
-      "Action": "iot:Subscribe",
-      "Resource": ["*"],
-      "Effect": "Allow"
-    },
-    {
-      "Action": "iot:Receive",
+      "Action": ["*"],
       "Resource": ["*"],
       "Effect": "Allow"
     }
