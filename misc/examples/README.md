@@ -1,4 +1,52 @@
-# Integration Test Setup
+# Examples Setup
+
+There are two slightly different examples:
+
+1. `docker-compose run upparat-alpn`, directly connect to AWS from Upparat. This is probably what you want unless you have more than one MQTT client connected to AWS IoT.
+1. `docker-compose run upparat-bridged`, connect to Mosquitto in bridged mode that is connected to AWS (advanced).
+
+## AWS Setup
+
+1. [Create an AWS IoT Thing](https://docs.aws.amazon.com/general/latest/gr/iot-core.html) and download the certificates. We will reference the downloaded files as:
+
+```bash
+.cert.pem → certfile
+.private.key → keyfile
+
+# https://www.amazontrust.com/repository/AmazonRootCA1.pem
+AmazonRootCA1.pem.txt → cafile
+```
+
+2. Create and attach the following policy to the Thing's certificate:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": ["*"],
+      "Resource": ["*"],
+      "Effect": "Allow"
+    }
+  ]
+}
+```
+
+3. Create an S3 bucket and upload a test file (i.e. your firmware file).
+4. Create a role for the principle `IoT` and with the following policy attached:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::your-upparat-jobs-bucket/*"
+    }
+  ]
+}
+```
 
 ## Certificates
 
@@ -7,7 +55,6 @@
 Notes:
 
 - Client Certificate, `--certificate-pem-outfile = certfile`
-
 
 ## Upparat via Mosquitto AWS Bridge
 
@@ -74,11 +121,3 @@ To use AWS Iot jobs with pre-signed S3 URLs create a S3 bucket and a correspondi
 aws s3 rm s3://${UPPARAT_BUCKET_NAME} --recursive
 aws cloudformation delete-stack --stack-name upparat-test
 ```
-
-### Docker Compose
-
-- `docker-compose run upparat` to run upparat, also starts mosquitto.
-- `docker-compose up mosquitto` just mosquitto.
-
-**NOTE:** Keep in mind to stop mosquitto or any other MQTT clients on other devices
-to prevent two clients connecting with the same device id.
