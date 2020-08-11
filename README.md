@@ -77,8 +77,6 @@ download_location = <path>
 [broker]
 # MQTT broker host / port
 host = <host>
-
-# Default: 443
 port = <port>
 
 # Default: hostname

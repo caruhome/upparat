@@ -134,8 +134,8 @@ def _broker_section(config, thing_name=None):
             BROKER_SECTION, THING_NAME, fallback=socket.gethostname()
         )
 
-    broker.host = config.get(BROKER_SECTION, HOST)
-    broker.port = config.getint(BROKER_SECTION, PORT)
+    broker.host = config.get(BROKER_SECTION, HOST, fallback="127.0.0.1")
+    broker.port = config.getint(BROKER_SECTION, PORT, fallback=1883)
     broker.client_id = config.get(BROKER_SECTION, CLIENT_ID, fallback=NAME)
 
     broker.cafile = config.get(BROKER_SECTION, CAFILE, fallback=None)
