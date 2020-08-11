@@ -4,13 +4,13 @@ download_location = /tmp
 
 [broker]
 # https://docs.aws.amazon.com/general/latest/gr/iot-core.html
-host = a2i0ablp3lo6oi-ats.iot.eu-central-1.amazonaws.com
+host = @BROKER@
 port = 443
 
 # AWS IoT Thingname
 # https://docs.aws.amazon.com/iot/latest/developerguide/thing-registry.html
-thing_name = bobbi
-client_id = bobbi
+thing_name = @THINGNAME@
+client_id = @THINGNAME@
 
 # Client Certificate Authentication, see:
 # https://docs.aws.amazon.com/iot/latest/developerguide/device-certs-create.html
@@ -29,6 +29,6 @@ cafile = /config/cafile
 version = /hooks/version.sh
 install = /hooks/install.sh
 download = /hooks/download.sh
-; ready = <checks if your system is ready/stable>
-; install = @BASE_DIR@/upparat/hooks/install.sh
-; restart = <restarts your device/service>
+; ready =
+; install =
+; restart =
