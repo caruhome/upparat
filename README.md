@@ -7,7 +7,6 @@ Several hooks provide a seamless integration in your device environment and allo
 to use any software update tool such as [RAUC](https://github.com/rauc/rauc),
 [SWUpdate](https://github.com/sbabic/swupdate) or a custom solution.
 
-
 ## How it works
 
 The _Upparat_ subscribes to [AWS Iot Jobs](https://docs.aws.amazon.com/en_pv/iot/latest/developerguide/iot-jobs.html),
@@ -48,3 +47,7 @@ failed downloads and progress updates.
 docker-compose run test
 docker-compose run format
 ```
+
+#### Statemachine
+
+- See [visual representation](https://github.com/caruhome/upparat/blob/feat/alpn/docs/statemachine/statemachine.png) of the internal statemachine.
