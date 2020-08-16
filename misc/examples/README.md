@@ -1,9 +1,44 @@
 # Examples Setup
 
+```text
+
+        ┏━━━━━━━━━━━━━━━━━━━━┓               ┏━━━━━━━━━━━━━━━━━━━━┓
+        ┃     Example 1      ┃               ┃     Example 2      ┃
+        ┗━━━━━━━━━━━━━━━━━━━━┛               ┗━━━━━━━━━━━━━━━━━━━━┛
+
+  ┌───────────────────────────────┐     ┌───────────────────────────────┐
+  │                               │     │                               │
+  │     AWS IoT - MQTT Broker     │     │     AWS IoT - MQTT Broker     │
+  │                               │     │                               │
+  └───────────────────────────────┘     └───────────────────────────────┘
+                  ▲                                     ▲
+                  │                                     │
+                  │                                     │
+                  ▼                                     ▼
+  ┌───────────────────────────────┐     ┌───────────────────────────────┐
+  │                               │     │                               │
+  │            Upparat            │     │           Mosquitto           │
+  │                               │     │                               │
+  └───────────────────────────────┘     └───────────────────────────────┘
+                                                        ▲
+                                                        │
+                                              ┌─────────┴──────────┐
+                                              │                    │
+                                              │                    │
+                                    ┌──────────────────┐ ┌──────────────────┐
+                                    │                  │ │   <Other MQTT    │
+                                    │     Upparat      │ │     Client>      │
+                                    │                  │ │                  │
+                                    └──────────────────┘ └──────────────────┘
+
+```
+
 There are two slightly different examples:
 
-1. `docker-compose run upparat-alpn`, directly connect to AWS from Upparat. This is probably what you want unless you have more than one MQTT client connected to AWS IoT.
-1. `docker-compose run upparat-bridged`, connect to Mosquitto in bridged mode that is connected to AWS (advanced).
+- `docker-compose run upparat-alpn`:
+  Directly connect to AWS from Upparat. This is probably what you want unless you have more than one MQTT client connected to AWS IoT.
+- `docker-compose run upparat-bridged`:
+  Connect to Mosquitto in bridged mode that is connected to AWS (advanced).
 
 ## AWS Setup
 

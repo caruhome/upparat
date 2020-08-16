@@ -86,7 +86,7 @@ Create a job in the AWS Iot Console.
 }
 ```
 
-### Hooks Examples
+### Hooks
 
 #### `version.sh`
 
