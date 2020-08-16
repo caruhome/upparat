@@ -86,4 +86,4 @@ fi
 
 ## Statemachine
 
-![statemachine](./docs/statemachine.png)
+![statemachine](./statemachine/statemachine.png)

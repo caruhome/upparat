@@ -14,10 +14,10 @@ Several hooks provide a seamless integration in your device environment and allo
 to use any software update tool such as [RAUC](https://github.com/rauc/rauc),
 [SWUpdate](https://github.com/sbabic/swupdate) or a custom solution.
 
-## Quickstart
+## Getting started
 
-- [Examples](./misc/examples/README.md).
-- [Configuration setup docs](./docs/configuration.md)
+- [Checkout the examples](./misc/examples/README.md)
+- [Checkout the documentation](./docs/README.md)
 
 ## Development
 
@@ -28,7 +28,7 @@ to use any software update tool such as [RAUC](https://github.com/rauc/rauc),
   . .venv/bin/activate
   ```
 
-- Install Upparat in editable mode with development and optional sentry dependencies:
+- Install Upparat in editable mode with development and optional dependencies:
 
   ```
   pip install -e ".[dev,sentry]"
