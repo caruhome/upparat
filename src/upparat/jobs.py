@@ -77,7 +77,6 @@ class JobProgressStatus(Enum):
     REBOOT_START = "reboot_start"
     REBOOT_INTERRUPT = "reboot_interrupt"
 
-    # TODO correct enum?
     ERROR_MULTIPLE_IN_PROGRESS = "error_multiple_in_progress"
 
 

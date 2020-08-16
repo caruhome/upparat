@@ -32,6 +32,8 @@ failed downloads and progress updates.
   pip install -e ".[dev,sentry]"
   ```
 
+#### Pre-commit hooks
+
 - Install the [pre-commit framework](https://pre-commit.com/#install).
 
 - Install the pre-commit hooks:
