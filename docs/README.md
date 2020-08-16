@@ -84,6 +84,26 @@ fi
 
 `upparat -v -c <config>`
 
+## Systemd service & integration:
+
+```
+[Unit]
+Description=Upparat AWS IoT file installer
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/upparat -c /etc/upparat/upparat.conf
+Environment=PYTHONUNBUFFERED=1
+StandardOutput=journal
+
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
 ## Statemachine
 
 ![statemachine](./statemachine/statemachine.png)
