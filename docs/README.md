@@ -50,7 +50,21 @@ max_retries = <max_retries>
 
 ## Hooks
 
-#### `version.sh`
+Hooks provide a way to integrate Upparat with any update system (i.e. RAUC, swupdate, etc.).
+
+For a minimal setup you need to provide the following hooks:
+
+- `install`: Handle the installation of the downloaded file.
+- `reboot`: Handle the reboot of the device / service.
+
+### List of all hooks with examples for RAUC
+
+#### `version`
+
+Return the currently installed version. Used to compare
+with the provided version in the job, if equal update
+is not considered necessary. Optional, if not specified
+installation will always be executed.
 
 ```
 #!/usr/bin/env bash
@@ -62,7 +76,9 @@ max_retries = <max_retries>
 cat /etc/bundle-version
 ```
 
-#### `install.sh`
+#### `install`
+
+Handle the installation of the downloaded file (`$4`).
 
 ```
 #!/usr/bin/env bash
@@ -79,6 +95,8 @@ else
    rauc install $4
 fi
 ```
+
+#### `download`
 
 ## Start
 
