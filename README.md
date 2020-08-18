@@ -24,6 +24,7 @@ failed downloads and progress updates.
   ```
   python3 -m venv .venv
   . .venv/bin/activate
+  pip3 install --upgrade pip setuptools wheel
   ```
 
 - Install Upparat in editable mode with development and optional dependencies:
