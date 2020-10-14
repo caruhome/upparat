@@ -33,9 +33,7 @@ class RestartState(JobProcessingState):
             logger.info("Initiate restart")
             self.job_progress(JobProgressStatus.REBOOT_START.value)
             self.stop_restart_hook = run_hook(
-                settings.hooks.restart,
-                self.root_machine.inbox,
-                args=[self.job.meta, self.job.force],
+                settings.hooks.restart, self.root_machine.inbox, args=[self.job.meta]
             )
         else:
             logger.info("No restart hook provided")

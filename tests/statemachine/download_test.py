@@ -265,8 +265,9 @@ def test_on_job_cancelled(mocker, download_state):
     assert state.stop_download_hook.is_set()
 
 
+@pytest.mark.parametrize("force", [True, False])
 def test_download_hook_completed(
-    mocker, download_state, urllib_urlopen_mock, create_hook_event
+    mocker, download_state, force, urllib_urlopen_mock, create_hook_event
 ):
     urlopen_side_effect = [b"_", b""]
     urlopen_mock = urllib_urlopen_mock(side_effect=urlopen_side_effect)
@@ -274,6 +275,7 @@ def test_download_hook_completed(
 
     state, inbox, _, _, run_hook = download_state
     settings.hooks.download = "./download.sh"
+    state.job.force = force
 
     state.on_enter(None, None)
     hook_event = create_hook_event(settings.hooks.download, HOOK_STATUS_COMPLETED)
@@ -285,30 +287,6 @@ def test_download_hook_completed(
     # wait for download to complete
     event = inbox.get(timeout=TIMEOUT)
     assert event.name == DOWNLOAD_COMPLETED
-
-    # check downloaded file
-    with open(state.job.filepath, "r") as fd:
-        assert fd.read() == "_"
-
-
-def test_download_hook_with_force_flag_set(
-    mocker, download_state, urllib_urlopen_mock, create_hook_event
-):
-    urlopen_side_effect = [b"_", b""]
-    urlopen_mock = urllib_urlopen_mock(side_effect=urlopen_side_effect)
-    mocker.patch("urllib.request.urlopen", urlopen_mock)
-
-    state, inbox, _, _, run_hook = download_state
-    # hook but force is also set → ignore hook
-    settings.hooks.download = "./download.sh"
-    state.job.force = True
-
-    state.on_enter(None, None)
-
-    # wait for download to complete
-    event = inbox.get(timeout=TIMEOUT)
-    assert event.name == DOWNLOAD_COMPLETED
-    assert run_hook.call_count == 0
 
     # check downloaded file
     with open(state.job.filepath, "r") as fd:

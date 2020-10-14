@@ -88,9 +88,7 @@ def test_on_enter_restart_hook(restart_state):
         ),
     )
 
-    run_hook.assert_called_once_with(
-        settings.hooks.restart, inbox, args=[JOB_.meta, JOB_.force]
-    )
+    run_hook.assert_called_once_with(settings.hooks.restart, inbox, args=[JOB_.meta])
 
 
 def test_on_job_cancelled(restart_state):
