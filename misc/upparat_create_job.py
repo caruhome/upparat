@@ -57,21 +57,13 @@ def parse_arguments(args):
         "--force",
         action="store_true",
         default=False,
-        help="Force the update (ignore hooks).",
+        help="Force the update (ignore version hook before installation).",
     )
     parser.add_argument(
         "--dry-run",
         action="store_true",
         default=False,
         help="Dry run / simulate what would happen.",
-    )
-    # FIXME: Temporary flag since we still have older Upparat instances running
-    # where the --force flag is a string ("True") instead of boolean.
-    parser.add_argument(
-        "--create-legacy-job",
-        action="store_true",
-        default=False,
-        help="Legacy flag for Upparat versions <1.5 where the force flag was a string.",
     )
     parser.add_argument(
         "--target-selection",
@@ -151,10 +143,7 @@ def main(arguments):
 
     s3_object_url = f"https://{arguments.s3_bucket}.s3.amazonaws.com/{arguments.file}"
 
-    # FIXME: See --legacy flag. Remove this in the near future!
-    legacy_job = arguments.create_legacy_job
-    force = arguments.force if not legacy_job else str(arguments.force)
-    force_pretty = force if not legacy_job else f"'{force}' (→ legacy job)"
+    force = arguments.force
 
     document = create_job_document(
         s3_object_url=s3_object_url, version=arguments.version, force=force
@@ -164,7 +153,7 @@ def main(arguments):
     print(f" → Job: {job_id}")
     print(f" → File: {s3_object_url}")
     print(f" → Version: {arguments.version}")
-    print(f" → Force: {force_pretty}")
+    print(f" → Force: {force}")
     print(f" → ARN S3 role: {arguments.arn_s3_role}")
     print(f" → ARN IoT: {arguments.arn_iot}")
     print(f" → Things: {thing_names}")
