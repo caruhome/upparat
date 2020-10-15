@@ -57,7 +57,7 @@ def parse_arguments(args):
         "--force",
         action="store_true",
         default=False,
-        help="Force the update (ignore hooks prior installation).",
+        help="Force the update (ignore version & pre-download hooks).",
     )
     parser.add_argument(
         "--dry-run",

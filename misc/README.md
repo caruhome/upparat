@@ -21,7 +21,7 @@ A little helper to create an Upparat job.
     --job-id JOB_ID             A unique job id (if not provided, a generated UUID4).
     --thing THING               Thing(s) that should be updated. Or: cat things | ./upparat_create_job.py
     --group GROUP               Group(s) that should be included in this job.
-    --force                     Force the update (ignore hooks prior to installation).
+    --force                     Force the update (ignore version & pre-download hooks).
     --dry-run                   Dry run / simulate what would happen.
     --target-selection          Change targetSelection of job.{SNAPSHOT,CONTINUOUS}
 
