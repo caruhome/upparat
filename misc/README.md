@@ -9,7 +9,6 @@ A little helper to create an Upparat job.
                                  S3_BUCKET --arn-s3-role ARN_S3_ROLE --arn-iot
                                  ARN_IOT [--job-id JOB_ID] [--thing THING]
                                  [--group GROUP] [--force] [--dry-run]
-                                 [--create-legacy-job]
                                  [--target-selection {SNAPSHOT,CONTINUOUS}]
 
     Create Upparat Jobs.
@@ -22,9 +21,8 @@ A little helper to create an Upparat job.
     --job-id JOB_ID             A unique job id (if not provided, a generated UUID4).
     --thing THING               Thing(s) that should be updated. Or: cat things | ./upparat_create_job.py
     --group GROUP               Group(s) that should be included in this job.
-    --force                     Force the update (ignore hooks).
+    --force                     Force the update (ignore version & pre-download hooks).
     --dry-run                   Dry run / simulate what would happen.
-    --create-legacy-job         Legacy flag for Upparat versions <1.5 where the force flag was a string.
     --target-selection          Change targetSelection of job.{SNAPSHOT,CONTINUOUS}
 
 ### Examples
@@ -39,7 +37,7 @@ A little helper to create an Upparat job.
     --group mygroup \
     --thing mything
 
-*Output:*
+_Output:_
 
     Running Upparat Job Creator \o/
 
@@ -55,7 +53,7 @@ A little helper to create an Upparat job.
 
     ✓ Job 'my-group-and-thing-rollout-to-1.2' created!
 
-*You can also pipe a list into `./upparat_create_job.py` with things:*
+_You can also pipe a list into `./upparat_create_job.py` with things:_
 
     cat things | ./upparat_create_job.py (...)
 

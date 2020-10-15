@@ -76,36 +76,12 @@ def test_on_enter_no_hook(verify_installation_state):
     )
 
 
-def test_on_enter_force_job(verify_installation_state):
-    state, inbox, mqtt_client, _, _ = verify_installation_state
-
-    settings.hooks.version = "./version.sh"
-    state.job = create_job_with(force=True)
-
-    state.on_enter(None, None)
-
-    assert inbox.qsize() == 1
-    published_event = inbox.get_nowait()
-    assert published_event.name == JOB_INSTALLATION_COMPLETE
-
-    mqtt_client.publish.assert_called_once_with(
-        f"$aws/things/{settings.broker.thing_name}/jobs/{state.job.id_}/update",
-        json.dumps(
-            {
-                "status": JobStatus.SUCCEEDED.value,
-                "statusDetails": {
-                    "state": JobSuccessStatus.COMPLETE_NO_VERSION_CHECK.value,
-                    "message": "none",
-                },
-            }
-        ),
-    )
-
-
-def test_on_enter_hook_executed(verify_installation_state):
+@pytest.mark.parametrize("force", [True, False])
+def test_on_enter_hook_executed(verify_installation_state, force):
     state, inbox, _, _, run_hook = verify_installation_state
 
     settings.hooks.version = "./version.sh"
+    state.job = create_job_with(force=force)
 
     state.on_enter(None, None)
 
