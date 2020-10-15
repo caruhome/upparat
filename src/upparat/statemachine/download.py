@@ -153,13 +153,16 @@ class DownloadState(JobProcessingState):
 
     def on_enter(self, state, event):
         hook = settings.hooks.download
+        force = self.job.force
 
-        if hook:
+        if hook and not force:
             self.stop_download_hook = run_hook(
                 hook, self.root_machine.inbox, args=[self.job.meta]
             )
         else:
-            logger.info("Skip download hook: no-hook defined.")
+            logger.info(
+                f"Skip download hook: Hook={hook if hook else 'no-hook'}, force={force}."
+            )
             self.start_download_thread()
 
     def stop_hooks(self):
