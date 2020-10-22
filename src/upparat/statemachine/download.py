@@ -118,7 +118,7 @@ def download(job, stop_download, publish, update_job_progress):
             publish(pysm.Event(DOWNLOAD_INTERRUPTED))
         else:
             logger.error(f"HTTPError {http_error.status}: {http_error.reason}.")
-            raise
+            raise http_error
     except Exception as exception:
         if type(exception) not in RETRYABLE_EXCEPTIONS:
             # see issue #19, instead of hanging on unhanded exception,
@@ -127,7 +127,10 @@ def download(job, stop_download, publish, update_job_progress):
             logger.exception("Unhandled failure. Starting over.")
             update_job_progress(JobProgressStatus.DOWNLOAD_INTERRUPT.value)
             publish(pysm.Event(DOWNLOAD_INTERRUPTED))
-        raise
+        else:
+            # let backoff.on_exception handle retry
+            # for this exception
+            raise exception
 
 
 class DownloadState(JobProcessingState):
