@@ -36,10 +36,18 @@ READ_CHUNK_SIZE_BYTES = 1024 * 100  # 100 kib
 REQUEST_TIMEOUT_SEC = 30
 BACKOFF_EXPO_MAX_SEC = 2 ** 6  # 64
 
+RETRYABLE_EXCEPTIONS = (
+    URLError,
+    HTTPError,
+    RemoteDisconnected,
+    socket.timeout,
+    ConnectionResetError,
+)
+
 
 @backoff.on_exception(
     functools.partial(backoff.expo, max_value=BACKOFF_EXPO_MAX_SEC),
-    (URLError, HTTPError, RemoteDisconnected, socket.timeout, ConnectionResetError),
+    RETRYABLE_EXCEPTIONS,
     jitter=backoff.full_jitter,
 )
 def download(job, stop_download, publish, update_job_progress):
@@ -110,7 +118,16 @@ def download(job, stop_download, publish, update_job_progress):
             publish(pysm.Event(DOWNLOAD_INTERRUPTED))
         else:
             logger.error(f"HTTPError {http_error.status}: {http_error.reason}.")
-            raise http_error
+            raise
+    except Exception as exception:
+        if type(exception) not in RETRYABLE_EXCEPTIONS:
+            # see issue #19, instead of hanging on unhanded exception,
+            # we try to improve the situation by just starting over
+            # since we don't have any better error recovery strategy.
+            logger.exception("Unhandled failure. Starting over.")
+            update_job_progress(JobProgressStatus.DOWNLOAD_INTERRUPT.value)
+            publish(pysm.Event(DOWNLOAD_INTERRUPTED))
+        raise
 
 
 class DownloadState(JobProcessingState):

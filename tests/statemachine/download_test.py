@@ -156,6 +156,31 @@ def test_download_completed_successfully_with_retries(
     assert second_request.full_url == state.job.file_url
 
 
+@pytest.mark.parametrize(
+    "urlopen_side_effect, expected_download",
+    [([b"11", Exception("What could go wrong?"), b"22", b"33", b""], "112233")],
+)
+def test_download_interrupted_on_exception(
+    urlopen_side_effect,
+    expected_download,
+    urllib_urlopen_mock,
+    download_state,
+    mocker,
+    tmpdir,
+):
+    urlopen_mock = urllib_urlopen_mock(side_effect=urlopen_side_effect)
+    mocker.patch("urllib.request.urlopen", urlopen_mock)
+    mocker.patch("time.sleep")  # to make test faster
+
+    state, inbox, mqtt_client, _, _ = download_state
+    state.on_enter(None, None)
+
+    # check if download gets interrupted
+    # and thus retried, see issue #19.
+    event = inbox.get(timeout=TIMEOUT)
+    assert event.name == DOWNLOAD_INTERRUPTED
+
+
 def test_download_job_progress_updates(mocker, download_state, urllib_urlopen_mock):
     urlopen_side_effect = [b"11", b"22", b"33", b""]
     urlopen_mock = urllib_urlopen_mock(side_effect=urlopen_side_effect)
