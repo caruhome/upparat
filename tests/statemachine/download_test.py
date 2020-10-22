@@ -119,6 +119,7 @@ def test_download_interrupted_on_http_403(mocker, download_state, urllib_urlopen
         ([b"11", RemoteDisconnected(), b"22", b"33", b""], "112233"),
         ([b"11", URLError("reason"), b"22", b"33", b""], "112233"),
         ([b"11", socket.timeout(), b"22", b"33", b""], "112233"),
+        ([b"11", ConnectionResetError(), b"22", b"33", b""], "112233"),
     ],
 )
 def test_download_completed_successfully_with_retries(

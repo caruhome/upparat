@@ -39,7 +39,7 @@ BACKOFF_EXPO_MAX_SEC = 2 ** 6  # 64
 
 @backoff.on_exception(
     functools.partial(backoff.expo, max_value=BACKOFF_EXPO_MAX_SEC),
-    (URLError, HTTPError, RemoteDisconnected, socket.timeout),
+    (URLError, HTTPError, RemoteDisconnected, socket.timeout, ConnectionResetError),
     jitter=backoff.full_jitter,
 )
 def download(job, stop_download, publish, update_job_progress):
