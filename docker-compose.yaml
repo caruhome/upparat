@@ -1,14 +1,5 @@
 version: '3.4'
 services:
-  upparat:
-    build: .
-    image: upparat:local
-    command: --verbose
-    volumes:
-      # make sure to not mount over .egginfo in /app/upparat
-      - ./src/upparat:/app/upparat/src/upparat
-      - ./setup.py:/app/upparat/setup.py
-      - ./setup.cfg:/app/upparat/setup.cfg
   test:
     build: .
     image: upparat:local

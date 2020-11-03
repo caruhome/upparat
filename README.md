@@ -1,5 +1,17 @@
 # Upparat [![Build status](https://badge.buildkite.com/6bea55b122e71fbed1753df01ba0c9df0c0f0cfe111d2589fb.svg)](https://buildkite.com/caru/upparat)
 
+```
+         __    Hi, I'm Upparat!
+ _(\    |@@| / 
+(__/\__ \--/ __
+   \___|----|  |   __
+       \ }{ /\ )_ / _\
+       /\__/\ \__O (__
+      (--/\--)    \__/
+      _)(  )(_
+     `---''---`
+```
+
 The _Upparat_ is a secure and robust service that runs on your
 IoT device to download and install files such as firmware updates.
 

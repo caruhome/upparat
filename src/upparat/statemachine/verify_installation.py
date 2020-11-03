@@ -29,7 +29,7 @@ class VerifyInstallationState(JobProcessingState):
         super().__init__()
 
     def on_enter(self, state, event):
-        if self.job.force or not settings.hooks.version:
+        if not settings.hooks.version:
             logger.info("Skip version check")
             self.job_succeeded(JobSuccessStatus.COMPLETE_NO_VERSION_CHECK.value)
             self.publish(pysm.Event(JOB_INSTALLATION_COMPLETE))

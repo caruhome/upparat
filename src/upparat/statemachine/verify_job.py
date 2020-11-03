@@ -38,13 +38,18 @@ class VerifyJobState(JobProcessingState):
 
     def on_enter(self, state, event):
         if self.job.status == JobStatus.QUEUED.value:
-            if self.job.force or not settings.hooks.version:
-                logger.info("Skip version check")
+            version_hook = settings.hooks.version
+            force = self.job.force
+
+            if force or not version_hook:
+                logger.info(
+                    f"Skip version check [force={force}, {version_hook if version_hook else 'no-hook'}]"  # noqa
+                )
                 return self._job_verified()
+
             logger.debug("Start version check")
-            # Start version check
             self.stop_version_hook = run_hook(
-                settings.hooks.version, self.root_machine.inbox, args=[self.job.meta]
+                version_hook, self.root_machine.inbox, args=[self.job.meta]
             )
 
         elif self.job.status == JobStatus.IN_PROGRESS.value:
