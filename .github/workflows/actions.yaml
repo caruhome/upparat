@@ -1,0 +1,9 @@
+name: upparat-actions
+on: [push]
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run Tests
+        run: docker-compose run test
