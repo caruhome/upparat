@@ -1,4 +1,6 @@
-# Upparat ![Build Status](https://github.com/caruhome/upparat/workflows/Unittests/badge.svg)
+# Upparat
+
+![Build Status](https://github.com/caruhome/upparat/workflows/Unittests/badge.svg)
 
 ```
          __    Hi, I'm Upparat!
