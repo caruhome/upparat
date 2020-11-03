@@ -30,8 +30,6 @@ from upparat.statemachine import JobProcessingState
 
 logger = logging.getLogger(__name__)
 
-# TODO double check what makes sense here
-# https://stackoverflow.com/questions/28695448/
 READ_CHUNK_SIZE_BYTES = 1024 * 100  # 100 kib
 REQUEST_TIMEOUT_SEC = 30
 BACKOFF_EXPO_MAX_SEC = 2 ** 6  # 64
@@ -106,11 +104,6 @@ def download(job, stop_download, publish, update_job_progress):
 
     except HTTPError as http_error:
         if http_error.status == 416:
-            # TODO review this decision:
-            # right now we don't want to pass additional file
-            # meta data through the job so if we get an error
-            # due to an unsatisfiable ranger header, it's
-            # likely because we already have all bytes.
             publish(pysm.Event(DOWNLOAD_COMPLETED, **{JOB: job}))
         elif http_error.status == 403:
             logger.warning("URL has expired. Starting over.")

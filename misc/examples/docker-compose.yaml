@@ -1,0 +1,42 @@
+version: '3.4'
+services:
+  mosquitto:
+    image: eclipse-mosquitto
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    working_dir: /mosquitto
+    command: "/usr/sbin/mosquitto -c /mosquitto/aws-bridge.conf -v"
+    volumes:
+      - ./mosquitto/:/mosquitto
+  upparat-bridged:
+    build: ../../.
+    image: upparat:local
+    command: --verbose --config /config/config.ini
+    volumes:
+      # use bridge config
+      - ./upparat/config/config.bridge.ini:/config/config.ini
+      - ./upparat/hooks/:/hooks/
+      - ./upparat/tmp:/tmp
+      # make sure to not mount over .egginfo in /app/upparat
+      - ../../src/upparat:/app/upparat/src/upparat
+      - ../../setup.py:/app/upparat/setup.py
+      - ../../setup.cfg:/app/upparat/setup.cfg
+    depends_on:
+      - mosquitto
+  upparat-alpn:
+    build: ../../.
+    image: upparat:local
+    command: --verbose --config /config/config.ini
+    volumes:
+      # use ALPN config
+      - ./upparat/config/config.alpn.ini:/config/config.ini
+      - ./upparat/config/certs/cafile:/config/cafile
+      - ./upparat/config/certs/certfile:/config/certfile
+      - ./upparat/config/certs/keyfile:/config/keyfile
+      - ./upparat/hooks/:/hooks/
+      - ./upparat/tmp:/tmp
+      # make sure to not mount over .egginfo in /app/upparat
+      - ../../src/upparat:/app/upparat/src/upparat
+      - ../../setup.py:/app/upparat/setup.py
+      - ../../setup.cfg:/app/upparat/setup.cfg

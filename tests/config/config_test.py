@@ -188,6 +188,28 @@ def test_port_config_file(create_settings):
     assert settings.broker.port == port
 
 
+def test_no_certs_config_file(create_settings):
+    settings = create_settings(broker={})
+
+    assert settings.broker.cafile is None
+    assert settings.broker.certfile is None
+    assert settings.broker.keyfile is None
+
+
+def test_certs_config_file(create_settings):
+    cafile = "ca.pem"
+    certfile = "cert.pem.key"
+    keyfile = "private.pem.key"
+
+    settings = create_settings(
+        broker={"cafile": cafile, "certfile": certfile, "keyfile": keyfile}
+    )
+
+    assert settings.broker.cafile == cafile
+    assert settings.broker.certfile == certfile
+    assert settings.broker.keyfile == keyfile
+
+
 def test_hooks_default(create_settings):
     settings = create_settings()
     assert not settings.hooks.version

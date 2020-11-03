@@ -1,0 +1,26 @@
+listener 1883
+
+log_type all
+log_timestamp true
+log_timestamp_format %Y-%m-%dT%H:%M:%S
+
+connection aws-iot-bridge
+bridge_cafile /mosquitto/certs/cafile
+bridge_certfile /mosquitto/certs/certfile
+bridge_keyfile /mosquitto/certs/keyfile
+bridge_alpn x-amzn-mqtt-ca
+
+address @BROKER@:443
+remote_clientid @THINGNAME@
+round_robin true
+notifications false
+try_private true
+
+# Job topic
+topic $aws/things/@THINGNAME@/jobs/get out 1
+topic $aws/things/@THINGNAME@/jobs/+/get out 1
+topic $aws/things/@THINGNAME@/jobs/+/update out 1
+
+topic $aws/things/@THINGNAME@/jobs/notify in 1
+topic $aws/things/@THINGNAME@/jobs/get/accepted in 1
+topic $aws/things/@THINGNAME@/jobs/+/get/accepted in 1

@@ -1,0 +1,16 @@
+[service]
+log_level = DEBUG
+download_location = /tmp
+
+[broker]
+host = mosquitto
+port = 1883
+thing_name = ubezy9ak
+
+[hooks]
+version = /hooks/version.sh
+install = /hooks/install.sh
+download = /hooks/download.sh
+; ready =
+; install =
+; restart =
