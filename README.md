@@ -1,8 +1,8 @@
-# Upparat [![Build status](https://badge.buildkite.com/6bea55b122e71fbed1753df01ba0c9df0c0f0cfe111d2589fb.svg)](https://buildkite.com/caru/upparat)
+# Upparat ![Build Status](https://github.com/caruhome/upparat/workflows/Unittests/badge.svg)
 
 ```
          __    Hi, I'm Upparat!
- _(\    |@@| / 
+ _(\    |@@| /
 (__/\__ \--/ __
    \___|----|  |   __
        \ }{ /\ )_ / _\
