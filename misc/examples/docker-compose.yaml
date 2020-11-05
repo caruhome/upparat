@@ -8,7 +8,10 @@ services:
     working_dir: /mosquitto
     command: "/usr/sbin/mosquitto -c /mosquitto/aws-bridge.conf -v"
     volumes:
-      - ./mosquitto/:/mosquitto
+      - ./mosquitto/aws-bridge.conf:/mosquitto/aws-bridge.conf
+      - ./upparat/config/cafile:/certs/cafile
+      - ./upparat/config/certfile:/certs/certfile
+      - ./upparat/config/keyfile:/certs/keyfile
   upparat-bridged:
     build: ../../.
     image: upparat:local
@@ -31,9 +34,9 @@ services:
     volumes:
       # use ALPN config
       - ./upparat/config/config.alpn.ini:/config/config.ini
-      - ./upparat/config/certs/cafile:/config/cafile
-      - ./upparat/config/certs/certfile:/config/certfile
-      - ./upparat/config/certs/keyfile:/config/keyfile
+      - ./upparat/config/cafile:/config/cafile
+      - ./upparat/config/certfile:/config/certfile
+      - ./upparat/config/keyfile:/config/keyfile
       - ./upparat/hooks/:/hooks/
       - ./upparat/tmp:/tmp
       # make sure to not mount over .egginfo in /app/upparat

@@ -58,4 +58,8 @@ misc/examples/mosquitto/aws-bridge.conf
 misc/examples/upparat/config/config.alpn.ini
 misc/examples/upparat/config/config.bridge.ini
 misc/examples/upparat/tmp
-misc/examples/upparat/config/certs
+
+# Keys for example
+misc/examples/upparat/config/certfile
+misc/examples/upparat/config/keyfile
+misc/examples/upparat/config/cafile
