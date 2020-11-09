@@ -65,4 +65,4 @@ docker-compose run format
 
 #### Statemachine
 
-- See [visual representation](https://github.com/caruhome/upparat/blob/feat/alpn/docs/statemachine/statemachine.png) of the internal statemachine.
+- See [visual representation](https://github.com/caruhome/upparat/blob/master/docs/statemachine/statemachine.png) of the internal statemachine.
