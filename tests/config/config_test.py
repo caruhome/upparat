@@ -246,7 +246,3 @@ def test_hooks_file_exists_with_x_permission(tmpdir, create_settings):
         path = Path(hooks[hook])
         path.chmod(stat.S_IRWXO)
         create_settings(hooks={hook: command})
-
-
-def test_foo():
-    assert True
