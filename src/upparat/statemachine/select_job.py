@@ -14,15 +14,14 @@ from upparat.events import MQTT_EVENT_PAYLOAD
 from upparat.events import MQTT_EVENT_TOPIC
 from upparat.events import MQTT_MESSAGE_RECEIVED
 from upparat.events import MQTT_SUBSCRIBED
-from upparat.events import SELECT_JOB_ACTION_MISMATCH
 from upparat.events import SELECT_JOB_INTERRUPTED
 from upparat.jobs import describe_job_execution
 from upparat.jobs import describe_job_execution_response
 from upparat.jobs import EXECUTION
+from upparat.jobs import is_upparat_job_id
 from upparat.jobs import Job
 from upparat.jobs import JOB_ACCEPTED
 from upparat.jobs import JOB_DOCUMENT
-from upparat.jobs import JOB_DOCUMENT_ACTION
 from upparat.jobs import JOB_DOCUMENT_FILE
 from upparat.jobs import JOB_DOCUMENT_FORCE
 from upparat.jobs import JOB_DOCUMENT_META
@@ -34,7 +33,6 @@ from upparat.jobs import JOB_STATUS
 from upparat.jobs import JOB_STATUS_DETAILS
 from upparat.jobs import job_update_multiple_as_failed
 from upparat.jobs import JobProgressStatus
-from upparat.jobs import UPPARAT_ACTION
 from upparat.statemachine import BaseState
 
 logger = logging.getLogger(__name__)
@@ -57,6 +55,7 @@ class SelectJobState(BaseState):
         in_progress_jobs_ids = [
             job[JOB_ID]
             for job in job_execution_summaries[JOB_EXECUTION_SUMMARIES_PROGRESS]
+            if is_upparat_job_id(job[JOB_ID])
         ]
 
         # Sorted to make sure oldest is first [0]
@@ -66,6 +65,7 @@ class SelectJobState(BaseState):
                 job_execution_summaries[JOB_EXECUTION_SUMMARIES_QUEUED],
                 key=lambda summary: summary["queuedAt"],
             )
+            if is_upparat_job_id(job[JOB_ID])
         ]
 
         # Check if there is an in-progress job
@@ -131,15 +131,6 @@ class SelectJobState(BaseState):
         if topic_matches_sub(accepted_topic, topic):
             job_execution = payload[EXECUTION]
             job_document = job_execution[JOB_DOCUMENT]
-            job_document_action = job_document.get(JOB_DOCUMENT_ACTION)
-
-            # something else can also publish jobs → make sure to only handle the ones for us
-            if job_document_action != UPPARAT_ACTION:
-                logger.info(
-                    f"Job ignored: Job document does not match expected Upparat action field {UPPARAT_ACTION}."  # noqa
-                )
-                self.publish(Event(SELECT_JOB_ACTION_MISMATCH))
-                return
 
             job = Job(
                 id_=job_execution[JOB_ID],

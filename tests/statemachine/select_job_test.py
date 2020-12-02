@@ -5,11 +5,11 @@ import pytest
 
 from ..utils import create_mqtt_message_event  # noqa: F401
 from ..utils import create_mqtt_subscription_event  # noqa: F401
+from ..utils import generate_random_job_id
 from upparat.config import settings
 from upparat.events import JOB_SELECTED
 from upparat.events import MQTT_MESSAGE_RECEIVED
 from upparat.events import MQTT_SUBSCRIBED
-from upparat.events import SELECT_JOB_ACTION_MISMATCH
 from upparat.events import SELECT_JOB_INTERRUPTED
 from upparat.jobs import describe_job_execution_response
 from upparat.jobs import Job
@@ -20,6 +20,17 @@ from upparat.jobs import JobProgressStatus
 from upparat.jobs import JobStatus
 from upparat.statemachine import UpparatStateMachine
 from upparat.statemachine.select_job import SelectJobState
+
+
+NON_UPPARAT_IN_PROGRESS_JOBS = [
+    {"jobId": "not_for_upparat_job_in_progress_1", "queuedAt": 1},
+    {"jobId": "not_for_upparat_job_in_progress_2", "queuedAt": 2},
+]
+
+NON_UPPARAT_QUEUED_JOBS = [
+    {"jobId": "not_for_upparat_job_queued_1", "queuedAt": 3},
+    {"jobId": "not_for_upparat_job_queued_2", "queuedAt": 4},
+]
 
 
 @pytest.fixture
@@ -39,10 +50,13 @@ def select_job_state(mocker):
 def create_enter_event(mocker):
     def _create_enter_event(jobs_queued, jobs_in_progress):
         source_event = mocker.Mock()
+
+        # Add NON_UPPARAT_IN_PROGRESS_JOBS and NON_UPPARAT_QUEUED_JOBS to
+        # ensure select_job_state only works with correctly prefixed jobs.
         source_event.cargo = {
             "job_execution_summaries": {
-                "progress": jobs_in_progress,
-                "queued": jobs_queued,
+                "progress": jobs_in_progress + NON_UPPARAT_IN_PROGRESS_JOBS,
+                "queued": jobs_queued + NON_UPPARAT_QUEUED_JOBS,
             }
         }
 
@@ -58,22 +72,23 @@ def test_no_pending_jobs(select_job_state, create_enter_event, mocker):
     state, inbox, _, __ = select_job_state
 
     event = create_enter_event(jobs_queued=[], jobs_in_progress=[])
-    state.on_enter(None, event)
 
+    state.on_enter(None, event)
     published_event = inbox.get_nowait()
 
     assert published_event.name == SELECT_JOB_INTERRUPTED
     assert inbox.empty()
 
 
-def test_exactly_one_job_in_progress(select_job_state, create_enter_event, mocker):
+def test_exactly_job_in_progress(select_job_state, create_enter_event, mocker):
     state, _, mqtt_client, __ = select_job_state
 
-    job_id = "424242"
+    job_id = generate_random_job_id()
     thing_name = "bobby"
-
     settings.broker.thing_name = thing_name
+
     event = create_enter_event(jobs_queued=[], jobs_in_progress=[{"jobId": job_id}])
+
     state.on_enter(None, event)
 
     assert state.current_job_id == job_id
@@ -87,8 +102,9 @@ def test_exactly_one_job_in_progress(select_job_state, create_enter_event, mocke
 def test_more_than_one_job_in_progress(select_job_state, create_enter_event, mocker):
     state, inbox, mqtt_client, _ = select_job_state
 
-    job_id_1 = "1"
-    job_id_2 = "2"
+    job_id_1 = generate_random_job_id()
+    job_id_2 = generate_random_job_id()
+
     thing_name = "bobby"
 
     settings.broker.thing_name = thing_name
@@ -117,7 +133,7 @@ def test_more_than_one_job_in_progress(select_job_state, create_enter_event, moc
                     "status": JobStatus.FAILED.value,
                     "statusDetails": {
                         "state": JobProgressStatus.ERROR_MULTIPLE_IN_PROGRESS.value,
-                        "message": "Invalid: More than one job is IN PROGRESS: 1, 2",
+                        "message": f"Invalid: More than one job is IN PROGRESS: {job_id_1}, {job_id_2}",  # noqa
                     },
                 }
             ),
@@ -129,7 +145,7 @@ def test_more_than_one_job_in_progress(select_job_state, create_enter_event, moc
                     "status": JobStatus.FAILED.value,
                     "statusDetails": {
                         "state": JobProgressStatus.ERROR_MULTIPLE_IN_PROGRESS.value,
-                        "message": "Invalid: More than one job is IN PROGRESS: 1, 2",
+                        "message": f"Invalid: More than one job is IN PROGRESS: {job_id_1}, {job_id_2}",  # noqa
                     },
                 }
             ),
@@ -141,12 +157,12 @@ def test_multiple_jobs_in_queued(select_job_state, create_enter_event, mocker):
     """ make sure oldest gets selected first """
     state, inbox, _, __ = select_job_state
 
-    oldest_job_id = "42"
+    oldest_job_id = generate_random_job_id()
 
     jobs_queued = [
-        {"jobId": 1, "queuedAt": 100},
-        {"jobId": oldest_job_id, "queuedAt": 1},
-        {"jobId": 2, "queuedAt": 101},
+        {"jobId": generate_random_job_id(), "queuedAt": 100},
+        {"jobId": oldest_job_id, "queuedAt": 99},
+        {"jobId": generate_random_job_id(), "queuedAt": 101},
     ]
 
     event = create_enter_event(jobs_queued=jobs_queued, jobs_in_progress=[])
@@ -159,7 +175,7 @@ def test_multiple_jobs_in_queued(select_job_state, create_enter_event, mocker):
 def test_on_message_rejected_job(select_job_state, create_mqtt_message_event):
     state, inbox, _, __ = select_job_state
 
-    state.current_job_id = "42"
+    state.current_job_id = generate_random_job_id()
     settings.broker.thing_name = "bobby"
 
     event = create_mqtt_message_event(
@@ -176,37 +192,10 @@ def test_on_message_rejected_job(select_job_state, create_mqtt_message_event):
     assert inbox.empty()
 
 
-def test_on_message_not_from_upparat_job(select_job_state, create_mqtt_message_event):
-    state, inbox, _, __ = select_job_state
-
-    state.current_job_id = "42"
-    settings.broker.thing_name = "bobby"
-
-    event = create_mqtt_message_event(
-        describe_job_execution_response(
-            settings.broker.thing_name, state.current_job_id, state_filter=JOB_ACCEPTED
-        ),
-        {
-            "execution": {
-                "jobId": "42",
-                "status": JobStatus.IN_PROGRESS.value,
-                "statusDetails": "...",
-                "jobDocument": {"jobFromAnotherService": "notFromUpparat"},
-            }
-        },
-    )
-
-    state.on_message(None, event)
-
-    published_event = inbox.get_nowait()
-    assert published_event.name == SELECT_JOB_ACTION_MISMATCH
-    assert inbox.empty()
-
-
 def test_on_message_accepted_job(select_job_state, create_mqtt_message_event):
     state, inbox, _, __ = select_job_state
 
-    state.current_job_id = "42"
+    state.current_job_id = generate_random_job_id()
     settings.broker.thing_name = "bobby"
     status = JobStatus.IN_PROGRESS.value
     file_url = "https://foo.bar/baz.bin"
@@ -255,18 +244,18 @@ def test_on_message_accepted_job(select_job_state, create_mqtt_message_event):
 def test_on_message_not_matching_topic(select_job_state, create_mqtt_message_event):
     state, inbox, mqtt_client, __ = select_job_state
 
-    state.current_job_id = "42"
+    state.current_job_id = "upparat_42"
     settings.broker.thing_name = "bobby"
 
     event_rejected = create_mqtt_message_event(
         describe_job_execution_response(
-            "not_bobby", "not_42", state_filter=JOB_REJECTED
+            "not_bobby", "upparat_not_42", state_filter=JOB_REJECTED
         )
     )
 
     event_accepted = create_mqtt_message_event(
         describe_job_execution_response(
-            "not_bobby", "not_42", state_filter=JOB_ACCEPTED
+            "not_bobby", "upparat_not_42", state_filter=JOB_ACCEPTED
         )
     )
 
@@ -282,7 +271,7 @@ def test_on_subscription_topic_match(select_job_state, create_mqtt_subscription_
     state, inbox, mqtt_client, __ = select_job_state
 
     settings.broker.thing_name = "bobby"
-    state.current_job_id = "42"
+    state.current_job_id = generate_random_job_id()
     state.describe_job_execution_response = describe_job_execution_response(
         settings.broker.thing_name, state.current_job_id
     )
@@ -303,13 +292,13 @@ def test_on_subscription_topic_no_match(
     state, inbox, mqtt_client, __ = select_job_state
 
     settings.broker.thing_name = "bobby"
-    state.current_job_id = "42"
+    state.current_job_id = "upparat_42"
     state.describe_job_execution_response = describe_job_execution_response(
         settings.broker.thing_name, state.current_job_id
     )
 
     event = create_mqtt_subscription_event(
-        describe_job_execution_response("not_bobby", "not_42")
+        describe_job_execution_response("not_bobby", "upparat_not_42")
     )
 
     state.on_subscription(None, event)

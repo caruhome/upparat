@@ -4,6 +4,7 @@ from queue import Queue
 import pytest
 
 from ..utils import create_hook_event  # noqa: F401
+from ..utils import generate_random_job_id
 from upparat.config import settings
 from upparat.events import HOOK
 from upparat.events import HOOK_STATUS_COMPLETED
@@ -19,7 +20,7 @@ from upparat.statemachine import UpparatStateMachine
 from upparat.statemachine.restart import RestartState
 
 JOB_ = Job(
-    "42",
+    generate_random_job_id(),
     JobStatus.IN_PROGRESS,
     "http://foo.bar/baz.bin",
     "1.0.0",

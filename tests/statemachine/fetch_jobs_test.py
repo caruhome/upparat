@@ -4,6 +4,7 @@ import pytest
 
 from ..utils import create_mqtt_message_event  # noqa: F401
 from ..utils import create_mqtt_subscription_event  # noqa: F401
+from ..utils import generate_random_job_id
 from upparat.config import settings
 from upparat.events import JOBS_AVAILABLE
 from upparat.events import MQTT_MESSAGE_RECEIVED
@@ -79,7 +80,7 @@ def test_on_message_pending_queued_jobs(fetch_jobs_state, create_mqtt_message_ev
     settings.broker.thing_name = "bobby"
     state.on_enter(None, None)
 
-    queued_job = {"jobId": "42"}
+    queued_job = {"jobId": generate_random_job_id()}
     topic = f"$aws/things/{settings.broker.thing_name}/jobs/get/+"
     payload = {"queuedJobs": [queued_job], "inProgressJobs": []}
 
@@ -104,7 +105,7 @@ def test_on_message_pending_progress_jobs(fetch_jobs_state, create_mqtt_message_
     settings.broker.thing_name = "bobby"
     state.on_enter(None, None)
 
-    progress_job = {"jobId": "42"}
+    progress_job = {"jobId": generate_random_job_id()}
     topic = f"$aws/things/{settings.broker.thing_name}/jobs/get/+"
     payload = {"queuedJobs": [], "inProgressJobs": [progress_job]}
 

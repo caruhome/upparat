@@ -8,7 +8,8 @@ from urllib.error import URLError
 
 import pytest
 
-from ..utils import create_hook_event  # noqa: F401
+from ..utils import create_mqtt_message_event  # noqa: F401
+from ..utils import generate_random_job_id
 from upparat.config import settings
 from upparat.events import DOWNLOAD_COMPLETED
 from upparat.events import DOWNLOAD_INTERRUPTED
@@ -55,7 +56,7 @@ def download_state(mocker, tmpdir):
     state = DownloadState()
 
     state.job = Job(
-        id_="424242",
+        id_=generate_random_job_id(),
         status=JobStatus.IN_PROGRESS,
         file_url="https://foo.bar/baz",
         version="1.1.1",
