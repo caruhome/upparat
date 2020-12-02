@@ -11,6 +11,16 @@ from upparat.events import MQTT_MESSAGE_RECEIVED
 from upparat.statemachine import UpparatStateMachine
 from upparat.statemachine.monitor import MonitorState
 
+NON_UPPARAT_IN_PROGRESS_JOBS = [
+    {"jobId": "non_upparat_job_in_progress_1"},
+    {"jobId": "non_upparat_job_in_progress_2"},
+]
+
+NON_UPPARAT_QUEUED_JOBS = [
+    {"jobId": "non_upparat_job_queued_3"},
+    {"jobId": "non_upparat_job_queued_4"},
+]
+
 
 @pytest.fixture
 def monitor_state(mocker):
@@ -75,7 +85,13 @@ def test_on_message_pending_queued_jobs(monitor_state, create_mqtt_message_event
 
     queued_job = {"jobId": generate_random_job_id()}
     topic = f"$aws/things/{settings.broker.thing_name}/jobs/notify"
-    payload = {"jobs": {"IN_PROGRESS": [], "QUEUED": [queued_job]}}
+
+    payload = {
+        "jobs": {
+            "IN_PROGRESS": NON_UPPARAT_IN_PROGRESS_JOBS,
+            "QUEUED": NON_UPPARAT_QUEUED_JOBS + [queued_job],
+        }
+    }
 
     mqtt_message_event = create_mqtt_message_event(topic, payload)
     state.on_message(None, mqtt_message_event)
@@ -100,7 +116,13 @@ def test_on_message_pending_progress_jobs(monitor_state, create_mqtt_message_eve
 
     progress_job = {"jobId": generate_random_job_id()}
     topic = f"$aws/things/{settings.broker.thing_name}/jobs/notify"
-    payload = {"jobs": {"IN_PROGRESS": [progress_job], "QUEUED": []}}
+
+    payload = {
+        "jobs": {
+            "IN_PROGRESS": NON_UPPARAT_IN_PROGRESS_JOBS + [progress_job],
+            "QUEUED": NON_UPPARAT_QUEUED_JOBS,
+        }
+    }
 
     mqtt_message_event = create_mqtt_message_event(topic, payload)
     state.on_message(None, mqtt_message_event)

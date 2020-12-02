@@ -22,17 +22,6 @@ from upparat.statemachine import UpparatStateMachine
 from upparat.statemachine.select_job import SelectJobState
 
 
-NON_UPPARAT_IN_PROGRESS_JOBS = [
-    {"jobId": "not_for_upparat_job_in_progress_1", "queuedAt": 1},
-    {"jobId": "not_for_upparat_job_in_progress_2", "queuedAt": 2},
-]
-
-NON_UPPARAT_QUEUED_JOBS = [
-    {"jobId": "not_for_upparat_job_queued_1", "queuedAt": 3},
-    {"jobId": "not_for_upparat_job_queued_2", "queuedAt": 4},
-]
-
-
 @pytest.fixture
 def select_job_state(mocker):
     state = SelectJobState()
@@ -51,12 +40,10 @@ def create_enter_event(mocker):
     def _create_enter_event(jobs_queued, jobs_in_progress):
         source_event = mocker.Mock()
 
-        # Add NON_UPPARAT_IN_PROGRESS_JOBS and NON_UPPARAT_QUEUED_JOBS to
-        # ensure select_job_state only works with correctly prefixed jobs.
         source_event.cargo = {
             "job_execution_summaries": {
-                "progress": jobs_in_progress + NON_UPPARAT_IN_PROGRESS_JOBS,
-                "queued": jobs_queued + NON_UPPARAT_QUEUED_JOBS,
+                "progress": jobs_in_progress,
+                "queued": jobs_queued,
             }
         }
 

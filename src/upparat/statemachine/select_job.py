@@ -18,7 +18,6 @@ from upparat.events import SELECT_JOB_INTERRUPTED
 from upparat.jobs import describe_job_execution
 from upparat.jobs import describe_job_execution_response
 from upparat.jobs import EXECUTION
-from upparat.jobs import is_upparat_job_id
 from upparat.jobs import Job
 from upparat.jobs import JOB_ACCEPTED
 from upparat.jobs import JOB_DOCUMENT
@@ -55,7 +54,6 @@ class SelectJobState(BaseState):
         in_progress_jobs_ids = [
             job[JOB_ID]
             for job in job_execution_summaries[JOB_EXECUTION_SUMMARIES_PROGRESS]
-            if is_upparat_job_id(job[JOB_ID])
         ]
 
         # Sorted to make sure oldest is first [0]
@@ -65,7 +63,6 @@ class SelectJobState(BaseState):
                 job_execution_summaries[JOB_EXECUTION_SUMMARIES_QUEUED],
                 key=lambda summary: summary["queuedAt"],
             )
-            if is_upparat_job_id(job[JOB_ID])
         ]
 
         # Check if there is an in-progress job

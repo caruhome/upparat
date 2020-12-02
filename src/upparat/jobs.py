@@ -138,6 +138,12 @@ def job_update(mqtt_client, thing_name, job_id, status, state, message=None):
     )
 
 
+def filter_upparat_job_exectutions(job_executions):
+    return [
+        job for job in job_executions if job["jobId"].startswith(UPPARAT_JOB_PREFIX)
+    ]
+
+
 def job_update_multiple_as_failed(
     mqtt_client, thing_name, job_ids, state, message=None
 ):
