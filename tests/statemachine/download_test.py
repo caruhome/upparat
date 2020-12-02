@@ -8,6 +8,7 @@ from urllib.error import URLError
 
 import pytest
 
+from ..utils import create_hook_event  # noqa: F401
 from ..utils import create_mqtt_message_event  # noqa: F401
 from ..utils import generate_random_job_id
 from upparat.config import settings
