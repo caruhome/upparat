@@ -12,6 +12,7 @@ from upparat.events import JOBS_AVAILABLE
 from upparat.events import MQTT_EVENT_PAYLOAD
 from upparat.events import MQTT_EVENT_TOPIC
 from upparat.events import MQTT_MESSAGE_RECEIVED
+from upparat.jobs import filter_upparat_job_exectutions
 from upparat.jobs import pending_jobs_response
 from upparat.statemachine import BaseState
 
@@ -41,8 +42,14 @@ class MonitorState(BaseState):
 
         if topic_matches_sub(self.job_pending_response, topic):
             payload = json.loads(event.cargo[MQTT_EVENT_PAYLOAD])
-            in_progress_job_executions = payload["jobs"].get(JOBS_IN_PROGRESS, [])
-            queued_job_executions = payload["jobs"].get(JOBS_QUEUED, [])
+
+            in_progress_job_executions = filter_upparat_job_exectutions(
+                payload["jobs"].get(JOBS_IN_PROGRESS, [])
+            )
+
+            queued_job_executions = filter_upparat_job_exectutions(
+                payload["jobs"].get(JOBS_QUEUED, [])
+            )
 
             # If there are jobs available go to job selection state
             if in_progress_job_executions or queued_job_executions:

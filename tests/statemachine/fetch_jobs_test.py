@@ -4,6 +4,7 @@ import pytest
 
 from ..utils import create_mqtt_message_event  # noqa: F401
 from ..utils import create_mqtt_subscription_event  # noqa: F401
+from ..utils import generate_random_job_id
 from upparat.config import settings
 from upparat.events import JOBS_AVAILABLE
 from upparat.events import MQTT_MESSAGE_RECEIVED
@@ -12,6 +13,16 @@ from upparat.events import NO_JOBS_PENDING
 from upparat.jobs import get_pending_job_executions_response
 from upparat.statemachine import UpparatStateMachine
 from upparat.statemachine.fetch_jobs import FetchJobsState
+
+NON_UPPARAT_IN_PROGRESS_JOBS = [
+    {"jobId": "non_upparat_job_in_progress_1"},
+    {"jobId": "non_upparat_job_in_progress_2"},
+]
+
+NON_UPPARAT_QUEUED_JOBS = [
+    {"jobId": "non_upparat_job_queued_3"},
+    {"jobId": "non_upparat_job_queued_4"},
+]
 
 
 @pytest.fixture
@@ -63,7 +74,11 @@ def test_on_message_no_pending_jobs(fetch_jobs_state, create_mqtt_message_event)
     state.on_enter(None, None)
 
     topic = f"$aws/things/{settings.broker.thing_name}/jobs/get/+"
-    payload = {"queuedJobs": [], "inProgressJobs": []}
+
+    payload = {
+        "queuedJobs": NON_UPPARAT_QUEUED_JOBS,
+        "inProgressJobs": NON_UPPARAT_IN_PROGRESS_JOBS,
+    }
 
     mqtt_message_event = create_mqtt_message_event(topic, payload)
     state.on_message(None, mqtt_message_event)
@@ -79,9 +94,13 @@ def test_on_message_pending_queued_jobs(fetch_jobs_state, create_mqtt_message_ev
     settings.broker.thing_name = "bobby"
     state.on_enter(None, None)
 
-    queued_job = {"jobId": "42"}
+    queued_job = {"jobId": generate_random_job_id()}
     topic = f"$aws/things/{settings.broker.thing_name}/jobs/get/+"
-    payload = {"queuedJobs": [queued_job], "inProgressJobs": []}
+
+    payload = {
+        "queuedJobs": NON_UPPARAT_QUEUED_JOBS + [queued_job],
+        "inProgressJobs": NON_UPPARAT_IN_PROGRESS_JOBS,
+    }
 
     mqtt_message_event = create_mqtt_message_event(topic, payload)
     state.on_message(None, mqtt_message_event)
@@ -104,9 +123,13 @@ def test_on_message_pending_progress_jobs(fetch_jobs_state, create_mqtt_message_
     settings.broker.thing_name = "bobby"
     state.on_enter(None, None)
 
-    progress_job = {"jobId": "42"}
+    progress_job = {"jobId": generate_random_job_id()}
     topic = f"$aws/things/{settings.broker.thing_name}/jobs/get/+"
-    payload = {"queuedJobs": [], "inProgressJobs": [progress_job]}
+
+    payload = {
+        "queuedJobs": NON_UPPARAT_QUEUED_JOBS,
+        "inProgressJobs": NON_UPPARAT_IN_PROGRESS_JOBS + [progress_job],
+    }
 
     mqtt_message_event = create_mqtt_message_event(topic, payload)
     state.on_message(None, mqtt_message_event)

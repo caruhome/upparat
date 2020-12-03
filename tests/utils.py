@@ -1,4 +1,5 @@
 import json
+import uuid
 
 import pytest
 from pysm import Event
@@ -10,6 +11,8 @@ from upparat.events import MQTT_EVENT_PAYLOAD
 from upparat.events import MQTT_EVENT_TOPIC
 from upparat.events import MQTT_MESSAGE_RECEIVED
 from upparat.events import MQTT_SUBSCRIBED
+from upparat.jobs import is_upparat_job_id
+from upparat.jobs import UPPARAT_JOB_PREFIX
 
 
 @pytest.fixture
@@ -49,3 +52,9 @@ def create_hook_event(mocker):
         return event
 
     return _create_hook_event
+
+
+def generate_random_job_id():
+    job_id = f"{UPPARAT_JOB_PREFIX}{str(uuid.uuid4())[0:8]}"
+    assert is_upparat_job_id(job_id)
+    return job_id

@@ -14,6 +14,7 @@ from upparat.events import MQTT_EVENT_TOPIC
 from upparat.events import MQTT_MESSAGE_RECEIVED
 from upparat.events import MQTT_SUBSCRIBED
 from upparat.events import NO_JOBS_PENDING
+from upparat.jobs import filter_upparat_job_exectutions
 from upparat.jobs import get_pending_job_executions
 from upparat.jobs import get_pending_job_executions_response
 from upparat.statemachine import BaseState
@@ -54,8 +55,14 @@ class FetchJobsState(BaseState):
 
         # Handle accepted pending jobs executions
         if topic_matches_sub(self.get_pending_job_executions_response, topic):
-            in_progress_job_executions = payload.get(IN_PROGRESS_JOBS, [])
-            queued_job_executions = payload.get(QUEUED_JOBS, [])
+            in_progress_job_executions = filter_upparat_job_exectutions(
+                payload.get(IN_PROGRESS_JOBS, [])
+            )
+
+            queued_job_executions = filter_upparat_job_exectutions(
+                payload.get(QUEUED_JOBS, [])
+            )
+
             # If there are jobs available go to prepare state
             if in_progress_job_executions or queued_job_executions:
                 logger.debug("Job executions available.")

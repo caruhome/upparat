@@ -4,7 +4,11 @@ from enum import Enum
 
 from upparat.config import settings
 
-UPPARAT_ACTION = "upparat-update"
+# FIXME: Prefix jobs since there could be
+# multiple services consuming AWS IoT Jobs.
+# Revisit this once AWS roles out AWS IoT Job
+# Namespaces which would be the "correct" solution.
+UPPARAT_JOB_PREFIX = "upparat_"
 
 # AWS job execution
 EXECUTION = "execution"
@@ -16,7 +20,6 @@ JOBS = "jobs"
 # AWS job document
 JOB_ID = "jobId"
 JOB_DOCUMENT = "jobDocument"
-JOB_DOCUMENT_ACTION = "action"
 JOB_DOCUMENT_FILE = "file"
 JOB_DOCUMENT_VERSION = "version"
 JOB_DOCUMENT_META = "meta"
@@ -80,6 +83,10 @@ class JobProgressStatus(Enum):
     ERROR_MULTIPLE_IN_PROGRESS = "error_multiple_in_progress"
 
 
+def is_upparat_job_id(job_id):
+    return job_id.startswith(UPPARAT_JOB_PREFIX)
+
+
 def jobs_base(thing_name):
     return f"$aws/things/{thing_name}/jobs/"
 
@@ -129,6 +136,12 @@ def job_update(mqtt_client, thing_name, job_id, status, state, message=None):
             }
         ),
     )
+
+
+def filter_upparat_job_exectutions(job_executions):
+    return [
+        job for job in job_executions if job["jobId"].startswith(UPPARAT_JOB_PREFIX)
+    ]
 
 
 def job_update_multiple_as_failed(

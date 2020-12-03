@@ -11,7 +11,6 @@ JOB_VERIFIED = "job-verified"
 JOB_REVOKED = "job-revoked"
 
 SELECT_JOB_INTERRUPTED = "selected-job-interrupted"
-SELECT_JOB_ACTION_MISMATCH = "selected-job-action-mismatch"
 
 DOWNLOAD_COMPLETED = "download-completed"
 DOWNLOAD_INTERRUPTED = "download-interrupted"
