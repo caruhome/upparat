@@ -1,6 +1,6 @@
 # Upparat
 
-![Upload Python Package](https://github.com/caruhome/upparat/workflows/Upload%20Python%20Package/badge.svg)
+[![PyPI version](https://badge.fury.io/py/upparat.svg)](https://badge.fury.io/py/upparat)
 ![Build Status](https://github.com/caruhome/upparat/workflows/Unittests/badge.svg)
 
 ```
