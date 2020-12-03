@@ -1,5 +1,7 @@
-name: Run Upparat Unittests
+name: Execute Upparat Unittests
+
 on: [push]
+
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -7,5 +9,5 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build Test Environment
         run: docker-compose build test
-      - name: Run Tests
+      - name: Run Unittests
         run: docker-compose run test

@@ -7,12 +7,13 @@ from setuptools import setup
 with io.open("src/upparat/__init__.py", "rt", encoding="utf8") as f:
     version = re.search(r'__version__ = "(.*?)"', f.read()).group(1)
 
-with io.open("./README.md", "rt", encoding="utf8") as f:
-    long_description = f.read()
-
 setup(
     name="upparat",
     version=version,
+    description="Update Service for AWS IoT Core",
+    url="https://github.com/caruhome/upparat",
+    long_description_content_type="text/markdown",
+    long_description="The Upparat is a secure and robust service that runs on your IoT device to download and install files such as firmware updates. [Learn more](https://github.com/caruhome/upparat).",  # noqa
     python_requires=">=3.6",
     packages=find_packages("src"),
     package_dir={"": "src"},
