@@ -1,4 +1,4 @@
-name: Unittests
+name: Run Upparat Unittests
 on: [push]
 jobs:
   tests:
