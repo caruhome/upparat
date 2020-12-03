@@ -1,5 +1,6 @@
 # Upparat
 
+![Upload Python Package](https://github.com/caruhome/upparat/workflows/Upload%20Python%20Package/badge.svg)
 ![Build Status](https://github.com/caruhome/upparat/workflows/Unittests/badge.svg)
 
 ```
