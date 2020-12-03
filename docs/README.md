@@ -61,6 +61,10 @@ retry_interval = <retry in seconds>
 max_retries = <max_retries>
 ```
 
+## Job ID
+
+- In order for `upparat` to process the job it needs to be prefixed with `upparat_`.
+
 ## Hooks
 
 Hooks provide a way to integrate Upparat with any update system (i.e. RAUC, swupdate, etc.).

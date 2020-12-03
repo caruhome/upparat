@@ -26,6 +26,12 @@ downloads and verifies the specified file and runs an installation command of yo
 choice. It handles all the nitty gritty details such as cancelled jobs,
 failed downloads and progress updates.
 
+## Installation
+
+```
+pip install upparat
+```
+
 ## Getting started
 
 - [Checkout the examples](./misc/examples/README.md)

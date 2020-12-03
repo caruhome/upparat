@@ -136,6 +136,7 @@ def build_targets(arn_iot, thing_argument, group_argument):
 def main(arguments):
     print("Running Upparat Job Creator \\o/\n")
     job_id = arguments.job_id.replace(" ", "-").lower()
+    job_id = f"upparat_{job_id}"
 
     target_arns, thing_names, group_names = build_targets(
         arguments.arn_iot, arguments.thing, arguments.group
