@@ -1,7 +1,7 @@
 # Upparat
 
 [![PyPI version](https://badge.fury.io/py/upparat.svg)](https://badge.fury.io/py/upparat)
-![Build Status](https://github.com/caruhome/upparat/workflows/Unittests/badge.svg)
+![Execute Upparat Unittests](https://github.com/caruhome/upparat/workflows/Execute%20Upparat%20Unittests/badge.svg)
 
 ```
          __    Hi, I'm Upparat!
