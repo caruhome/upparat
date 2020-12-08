@@ -76,6 +76,10 @@ class MQTT(Client):
         message_id = self._mid_generate()
         self._subscription_mid[message_id] = topic
 
+        # We still want to keep the mapping for topic - qos
+        # in case the error gets fixed by a reconnect later!
+        self._subscriptions[topic] = qos
+
         result, _ = self._subscribe(topic, qos=qos, mid=message_id)
         if result != MQTT_ERR_SUCCESS:
             # Remove mid on failure
@@ -83,10 +87,6 @@ class MQTT(Client):
             logger.warning(
                 f"Unable to subscribe to topic {topic}: {error_string(result)}"
             )
-
-        # We still want to keep the mapping for topic - qos
-        # in case the error gets fixed by a reconnect later!
-        self._subscriptions[topic] = qos
 
         return result, message_id
 
