@@ -1,6 +1,6 @@
 # Upparat
 
-[![PyPI version](https://badge.fury.io/py/upparat.svg)](https://badge.fury.io/py/upparat)
+![PyPI](https://img.shields.io/pypi/v/upparat)
 ![Execute Upparat Unittests](https://github.com/caruhome/upparat/workflows/Execute%20Upparat%20Unittests/badge.svg)
 
 ```
