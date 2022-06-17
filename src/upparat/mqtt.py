@@ -1,5 +1,6 @@
 import logging
 import struct
+from threading import RLock
 
 from paho.mqtt.client import Client
 from paho.mqtt.client import CONNACK_ACCEPTED
@@ -54,6 +55,10 @@ class MQTT(Client):
         self._subscription_mid = {}
         self._unsubscription_mid = {}
 
+        self._subscriptions_lock = RLock()
+        self._subscription_mid_lock = RLock()
+        self._unsubscription_mid_lock = RLock()
+
         super().__init__(client_id)
 
         self.on_connect = self._on_connect_handler
@@ -73,36 +78,38 @@ class MQTT(Client):
         # is threaded on_unsubscribe callback can be
         # called before _subscribe returns here, but we
         # want to know the topic in the callback (B)
-        message_id = self._mid_generate()
-        self._subscription_mid[message_id] = topic
+        with self._subscriptions_lock and self._subscription_mid_lock:
+            message_id = self._mid_generate()
+            self._subscription_mid[message_id] = topic
 
-        # We still want to keep the mapping for topic - qos
-        # in case the error gets fixed by a reconnect later!
-        self._subscriptions[topic] = qos
+            # We still want to keep the mapping for topic - qos
+            # in case the error gets fixed by a reconnect later!
+            self._subscriptions[topic] = qos
 
-        result, _ = self._subscribe(topic, qos=qos, mid=message_id)
-        if result != MQTT_ERR_SUCCESS:
-            # Remove mid on failure
-            del self._subscription_mid[message_id]
-            logger.warning(
-                f"Unable to subscribe to topic {topic}: {error_string(result)}"
-            )
+            result, _ = self._subscribe(topic, qos=qos, mid=message_id)
+            if result != MQTT_ERR_SUCCESS:
+                # Remove mid on failure
+                del self._subscription_mid[message_id]
+                logger.warning(
+                    f"Unable to subscribe to topic {topic}: {error_string(result)}"
+                )
 
-        return result, message_id
+            return result, message_id
 
     def unsubscribe(self, topic):
-        self._subscriptions.pop(topic, None)
+        with self._subscriptions_lock and self._unsubscription_mid_lock:
+            self._subscriptions.pop(topic, None)
 
-        # Comment (A) also applies here.
-        message_id = self._mid_generate()
-        self._unsubscription_mid[message_id] = topic
+            # Comment (A) also applies here.
+            message_id = self._mid_generate()
+            self._unsubscription_mid[message_id] = topic
 
-        result, _ = self._unsubscribe(topic, mid=message_id)
+            result, _ = self._unsubscribe(topic, mid=message_id)
 
-        if result != MQTT_ERR_SUCCESS:
-            del self._unsubscription_mid[message_id]
+            if result != MQTT_ERR_SUCCESS:
+                del self._unsubscription_mid[message_id]
 
-        return result, message_id
+            return result, message_id
 
     def _on_connect_handler(self, _, __, ___, rc):
         message = connack_string(rc)
@@ -112,8 +119,10 @@ class MQTT(Client):
             logger.error(message)
 
         # (Re)subscribe to topics
-        for topic, qos in self._subscriptions.items():
-            self.subscribe(topic, qos=qos)
+
+        with self._subscriptions_lock and self._subscription_mid_lock:
+            for topic, qos in self._subscriptions.items():
+                self.subscribe(topic, qos=qos)
 
     def _on_message_handler(self, _, __, message):
         self._queue.put(
@@ -131,23 +140,26 @@ class MQTT(Client):
         # we want to know the mid → topic mapping here
         # since we want to publish an event with the topic
         # that has been subscribed to.
-        if mid in self._subscription_mid:
-            self._queue.put(
-                Event(
-                    MQTT_SUBSCRIBED,
-                    **{MQTT_EVENT_TOPIC: self._subscription_mid.pop(mid)},
+
+        with self._subscriptions_lock and self._subscription_mid_lock:
+            if mid in self._subscription_mid:
+                self._queue.put(
+                    Event(
+                        MQTT_SUBSCRIBED,
+                        **{MQTT_EVENT_TOPIC: self._subscription_mid.pop(mid)},
+                    )
                 )
-            )
-        else:
-            logger.error(f"No topic mapping found for subscription {mid}")
+            else:
+                logger.error(f"No topic mapping found for subscription {mid}")
 
     def _on_unsubscribe_handler(self, _, __, mid):
         # See comment (B), same applies here.
-        if mid in self._unsubscription_mid:
-            topic = self._unsubscription_mid.pop(mid)
-            self._queue.put(Event(MQTT_UNSUBSCRIBED, **{MQTT_EVENT_TOPIC: topic}))
-        else:
-            logger.error(f"No topic mapping found for unsubscription {mid}")
+        with self._subscriptions_lock and self._unsubscription_mid_lock:
+            if mid in self._unsubscription_mid:
+                topic = self._unsubscription_mid.pop(mid)
+                self._queue.put(Event(MQTT_UNSUBSCRIBED, **{MQTT_EVENT_TOPIC: topic}))
+            else:
+                logger.error(f"No topic mapping found for unsubscription {mid}")
 
     def _send_subscribe(self, dup, topics, mid=None):
         """ See Paho's _send_subscribe, allow for passing a mid. """
